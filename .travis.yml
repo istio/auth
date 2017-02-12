@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - 1.7.x
+
+install:
+  - go get github.com/Masterminds/glide
+  - glide install
+
+script:
+  - go list ./... | grep -v vendor | xargs go test -v
