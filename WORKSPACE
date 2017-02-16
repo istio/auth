@@ -151,3 +151,69 @@ new_go_repository(
     commit = "06d6eba81293389cafdff7fca90d75592194b2d9",
     importpath = "golang.org/x/text",
 )
+
+new_go_repository(
+    name = "com_github_howeyc_gopass",
+    commit = "bf9dde6d0d2c004a008c27aaee91170c786f6db8",
+    importpath = "github.com/howeyc/gopass",
+)
+
+new_go_repository(
+    name = "com_github_imdario_mergo",
+    commit = "50d4dbd4eb0e84778abe37cefef140271d96fade",
+    importpath = "github.com/imdario/mergo",
+)
+
+new_go_repository(
+    name = "org_golang_x_oauth2",
+    commit = "b9780ec78894ab900c062d58ee3076cd9b2a4501",
+    importpath = "golang.org/x/oauth2",
+)
+
+new_go_repository(
+    name = "com_github_coreos_go_oidc",
+    commit = "f828b1fc9b58b59bd70ace766bfc190216b58b01",
+    importpath = "github.com/coreos/go-oidc",
+)
+
+new_go_repository(
+    name = "com_github_jonboulle_clockwork",
+    commit = "bcac9884e7502bb2b474c0339d889cb981a2f27f",
+    importpath = "github.com/jonboulle/clockwork",
+)
+
+new_go_repository(
+    name = "org_golang_x_crypto",
+    commit = "453249f01cfeb54c3d549ddb75ff152ca243f9d8",
+    importpath = "golang.org/x/crypto",
+)
+
+new_go_repository(
+    name = "com_github_coreos_pkg",
+    commit = "1c941d73110817a80b9fa6e14d5d2b00d977ce2a",
+    importpath = "github.com/coreos/pkg",
+)
+
+new_go_repository(
+    name = "com_google_cloud_go",
+    commit = "e48f2a3c433b97fc00cd4fd6cd018c646f82b21b",
+    importpath = "cloud.google.com/go",
+)
+
+new_go_repository(
+    name = "com_github_googleapis_gax_go",
+    commit = "da06d194a00e19ce00d9011a13931c3f6f6887c7",
+    importpath = "github.com/googleapis/gax-go",
+)
+
+new_go_repository(
+    name = "org_golang_google_grpc",
+    commit = "cbcceb2942a489498cf22b2f918536e819d33f0a",
+    importpath = "google.golang.org/grpc",
+)
+
+new_go_repository(
+    name = "com_github_golang_protobuf",
+    commit = "8ee79997227bf9b34611aee7946ae64735e6fd93",
+    importpath = "github.com/golang/protobuf",
+)
