@@ -36,3 +36,5 @@ tool is used to automatically generate and update `BUILD` files:
 ```bash
 $ gazelle -go_prefix "github.com/istio/auth" --mode fix
 ```
+
+This is just a test
