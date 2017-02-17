@@ -2,7 +2,7 @@
 
 unformatted_files=$(gofmt -l .)
 if [ -n "$unformatted_files" ]; then
-  echo "The following files are not correctly formatted"
+  echo "The following files are incorrectly formatted"
   for file in $unformatted_files; do
     echo "  " $file
   done
