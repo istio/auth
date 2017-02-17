@@ -44,11 +44,11 @@ type CertOptions struct {
 	// Duration that certificate is valid for.
 	ValidFor time.Duration
 
-	// Signer private key file (PEM encoded).
-	SignerPriv string
+	// Signer certificate (PEM encoded).
+	SignerCert *x509.Certificate
 
-	// Signer certificate file (PEM encoded).
-	SignerCert string
+	// Signer private key (PEM encoded).
+	SignerPriv *rsa.PrivateKey
 
 	// Juju org", "Organization for the cert.
 	Org string
@@ -64,7 +64,7 @@ type CertOptions struct {
 }
 
 // Size of RSA key to generate.
-const RsaBits = 2048
+const rsaBits = 2048
 
 // GenCert generates a X.509 certificate with the given options.
 func GenCert(options CertOptions) ([]byte, []byte) {
@@ -73,14 +73,14 @@ func GenCert(options CertOptions) ([]byte, []byte) {
 	// private key will be used to sign this certificate in the self-signed
 	// case, otherwise the certificate is signed by the signer private key
 	// as specified in the CertOptions.
-	priv, err := rsa.GenerateKey(rand.Reader, RsaBits)
+	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
 		log.Fatalf("RSA key generation failed with error %s.", err)
 	}
 	template := genCertTemplate(options)
 	signingCert, signingKey := &template, priv
 	if !options.IsSelfSigned {
-		signingCert, signingKey = loadSigningCreds(options.SignerPriv, options.SignerCert)
+		signingCert, signingKey = options.SignerCert, options.SignerPriv
 	}
 	certBytes, err := x509.CreateCertificate(rand.Reader, &template, signingCert, &priv.PublicKey, signingKey)
 	if err != nil {
@@ -94,6 +94,35 @@ func GenCert(options CertOptions) ([]byte, []byte) {
 	privDer := x509.MarshalPKCS1PrivateKey(priv)
 	privPem := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: privDer})
 	return privPem, certPem
+}
+
+// loadSigningCreds loads the signer cert&key from the given files.
+//   signerCertFile: cert file name
+//   signerPrivFile: private key file name
+func LoadSigningCreds(signerCertFile string, signerPrivFile string) (*x509.Certificate, *rsa.PrivateKey) {
+	fileBytes, err := ioutil.ReadFile(signerCertFile)
+	if err != nil {
+		log.Fatalf("Reading cert file failed with error %s.", err)
+	}
+	der, _ := pem.Decode(fileBytes)
+	if der == nil {
+		log.Fatalf("Invalid PEM encoding.")
+	}
+	signingCert, err := x509.ParseCertificate(der.Bytes)
+	if err != nil {
+		log.Fatalf("Certificate parsing failed with error %s.", err)
+	}
+
+	fileBytes, err = ioutil.ReadFile(signerPrivFile)
+	if err != nil {
+		log.Fatalf("Reading private key file failed with error %s.", err)
+	}
+	der, _ = pem.Decode(fileBytes)
+	signingKey, err := x509.ParsePKCS1PrivateKey(der.Bytes)
+	if err != nil {
+		log.Fatalf("Private key parsing failed with error %s.", err)
+	}
+	return signingCert, signingKey
 }
 
 // toFromDates generates the certficiate validity period [notBefore, notAfter]
@@ -156,33 +185,4 @@ func genCertTemplate(options CertOptions) x509.Certificate {
 		template.KeyUsage |= x509.KeyUsageCertSign
 	}
 	return template
-}
-
-// loadSigningCreds loads the signer cert&key from the given files.
-//   signerPriv: private key file name
-//   signerCert: cert file name
-func loadSigningCreds(signerPriv string, signerCert string) (*x509.Certificate, *rsa.PrivateKey) {
-	fileBytes, err := ioutil.ReadFile(signerCert)
-	if err != nil {
-		log.Fatalf("Reading cert file failed with error %s.", err)
-	}
-	der, _ := pem.Decode(fileBytes)
-	if der == nil {
-		log.Fatalf("Invalid PEM encoding.")
-	}
-	signingCert, err := x509.ParseCertificate(der.Bytes)
-	if err != nil {
-		log.Fatalf("Certificate parsing failed with error %s.", err)
-	}
-
-	fileBytes, err = ioutil.ReadFile(signerPriv)
-	if err != nil {
-		log.Fatalf("Reading private key file failed with error %s.", err)
-	}
-	der, _ = pem.Decode(fileBytes)
-	signingKey, err := x509.ParsePKCS1PrivateKey(der.Bytes)
-	if err != nil {
-		log.Fatalf("Private key parsing failed with error %s.", err)
-	}
-	return signingCert, signingKey
 }
