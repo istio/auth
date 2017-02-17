@@ -43,7 +43,7 @@ type CertOptions struct {
 	// If empty string, the validity start time is set to time.Now()
 	ValidFrom string
 
-	// Duration this certificate is valid for.
+	// Duration that this certificate is valid for.
 	ValidFor time.Duration
 
 	// Signer certificate (PEM encoded).
