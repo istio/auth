@@ -38,10 +38,12 @@ type CertOptions struct {
 	// like kubernetes service account.
 	Host string
 
-	// Creation date formatted as Jan 1 15:04:05 2011.
+	// This certificate's validity start time formatted as
+	// Jan 1 15:04:05 2011.
+	// If empty string, the validity start time is set to time.Now()
 	ValidFrom string
 
-	// Duration that certificate is valid for.
+	// Duration this certificate is valid for.
 	ValidFor time.Duration
 
 	// Signer certificate (PEM encoded).
@@ -50,10 +52,10 @@ type CertOptions struct {
 	// Signer private key (PEM encoded).
 	SignerPriv *rsa.PrivateKey
 
-	// Juju org", "Organization for the cert.
+	// Organization for this certificate.
 	Org string
 
-	// Whether this cert should be a Cerificate Authority.
+	// Whether this certificate should be a Cerificate Authority.
 	IsCA bool
 
 	// Whether this cerificate is self-signed.
