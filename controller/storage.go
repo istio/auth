@@ -29,6 +29,7 @@ type SecureNamingMapping struct {
 	cond *sync.Cond
 }
 
+// Creates a new instance of SecureNamingMapping.
 func NewSecureNamingMapping() *SecureNamingMapping {
 	return &SecureNamingMapping{
 		mapping: map[string]sets.String{},
@@ -36,6 +37,7 @@ func NewSecureNamingMapping() *SecureNamingMapping {
 	}
 }
 
+// Adds a service into the mapping. This method does nothing if the service already exists.
 func (s SecureNamingMapping) AddService(svc string) {
 	s.cond.L.Lock()
 	defer s.cond.L.Unlock()
@@ -45,6 +47,7 @@ func (s SecureNamingMapping) AddService(svc string) {
 	}
 }
 
+// Removes a service from the mapping.
 func (s SecureNamingMapping) RemoveService(svc string) {
 	s.cond.L.Lock()
 	defer s.cond.L.Unlock()
@@ -52,6 +55,7 @@ func (s SecureNamingMapping) RemoveService(svc string) {
 	delete(s.mapping, svc)
 }
 
+// Sets the service accounts for the given service.
 func (s SecureNamingMapping) SetServiceAccounts(svc string, accts sets.String) {
 	s.cond.L.Lock()
 	defer s.cond.L.Unlock()
