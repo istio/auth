@@ -21,7 +21,7 @@ import (
 )
 
 func TestAddService(t *testing.T) {
-	test_cases := []struct {
+	testCases := []struct {
 		expectedValue map[string]sets.String
 		initialValue  map[string]sets.String
 		serviceToAdd  string
@@ -47,19 +47,19 @@ func TestAddService(t *testing.T) {
 		},
 	}
 
-	for ind, test_case := range test_cases {
+	for i, c := range testCases {
 		m := NewSecureNamingMapping()
-		m.mapping = test_case.initialValue
-		m.AddService(test_case.serviceToAdd)
+		m.mapping = c.initialValue
+		m.AddService(c.serviceToAdd)
 
-		if !reflect.DeepEqual(test_case.expectedValue, m.mapping) {
-			t.Errorf("Case %d failed, actual mapping is %v but expected mapping is %v", ind, m.mapping, test_case.expectedValue)
+		if !reflect.DeepEqual(c.expectedValue, m.mapping) {
+			t.Errorf("Case %d failed, actual mapping is %v but expected mapping is %v", i, m.mapping, c.expectedValue)
 		}
 	}
 }
 
 func TestRemoveService(t *testing.T) {
-	test_cases := []struct {
+	testCases := []struct {
 		expectedValue   map[string]sets.String
 		initialValue    map[string]sets.String
 		serviceToRemove string
@@ -85,19 +85,19 @@ func TestRemoveService(t *testing.T) {
 		},
 	}
 
-	for ind, test_case := range test_cases {
+	for i, c := range testCases {
 		m := NewSecureNamingMapping()
-		m.mapping = test_case.initialValue
-		m.RemoveService(test_case.serviceToRemove)
+		m.mapping = c.initialValue
+		m.RemoveService(c.serviceToRemove)
 
-		if !reflect.DeepEqual(test_case.expectedValue, m.mapping) {
-			t.Errorf("Case %d failed, actual mapping is %v but expected mapping is %v", ind, m.mapping, test_case.expectedValue)
+		if !reflect.DeepEqual(c.expectedValue, m.mapping) {
+			t.Errorf("Case %d failed, actual mapping is %v but expected mapping is %v", i, m.mapping, c.expectedValue)
 		}
 	}
 }
 
 func TestSetServiceAccounts(t *testing.T) {
-	test_cases := []struct {
+	cases := []struct {
 		expectedValue map[string]sets.String
 		initialValue  map[string]sets.String
 		serviceName   string
@@ -126,14 +126,14 @@ func TestSetServiceAccounts(t *testing.T) {
 		},
 	}
 
-	for ind, test_case := range test_cases {
+	for i, c := range cases {
 		m := NewSecureNamingMapping()
-		m.mapping = test_case.initialValue
+		m.mapping = c.initialValue
 
-		m.SetServiceAccounts(test_case.serviceName, test_case.accounts)
+		m.SetServiceAccounts(c.serviceName, c.accounts)
 
-		if !reflect.DeepEqual(test_case.expectedValue, m.mapping) {
-			t.Errorf("Case %d failed, actual mapping is %v but expected mapping is %v", ind, m.mapping, test_case.expectedValue)
+		if !reflect.DeepEqual(c.expectedValue, m.mapping) {
+			t.Errorf("Case %d failed, actual mapping is %v but expected mapping is %v", i, m.mapping, c.expectedValue)
 		}
 	}
 }
