@@ -58,8 +58,8 @@ func NewSecureNamingController(core v1core.CoreV1Interface) *SecureNamingControl
 	}
 
 	podHandlers := cache.ResourceEventHandlerFuncs{
-		AddFunc:    snc.addPod,
-		DeleteFunc: snc.deletePod,
+		AddFunc:    snc.updatePodServices,
+		DeleteFunc: snc.updatePodServices,
 		UpdateFunc: snc.updatePod,
 	}
 	snc.podStore, snc.podController = newPodInformer(core, podHandlers)
@@ -143,12 +143,9 @@ func (snc *SecureNamingController) processNextService() bool {
 	return true
 }
 
-func (snc *SecureNamingController) addPod(obj interface{}) {
-	p := obj.(*v1.Pod)
-	snc.enqueueServices(snc.getPodServices(p))
-}
-
-func (snc *SecureNamingController) deletePod(obj interface{}) {
+// Finds the services that the pod belongs to and push those services into
+// queue so that the services can be updated by the workers.
+func (snc *SecureNamingController) updatePodServices(obj interface{}) {
 	p := obj.(*v1.Pod)
 	snc.enqueueServices(snc.getPodServices(p))
 }
