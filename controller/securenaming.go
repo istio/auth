@@ -92,7 +92,8 @@ func (snc *SecureNamingController) Run(stopCh chan struct{}) {
 }
 
 func (snc *SecureNamingController) worker() {
-	glog.V(5).Infof("Starting a worker")
+	glog.Infof("Starting a worker")
+
 	for snc.processNextService() {
 	}
 }
@@ -101,7 +102,7 @@ func (snc *SecureNamingController) worker() {
 func (snc *SecureNamingController) processNextService() bool {
 	k, quit := snc.serviceQueue.Get()
 	if quit {
-		glog.V(4).Infof("No service to be process in the queue; the worker is quitting")
+		glog.Infof("No service to be process in the queue; the worker is quitting")
 		return false
 	}
 	defer snc.serviceQueue.Done(k)
@@ -109,11 +110,13 @@ func (snc *SecureNamingController) processNextService() bool {
 	key := k.(string)
 	obj, exist, err := snc.serviceIndexer.GetByKey(key)
 	if err != nil {
-		glog.V(4).Infof("Failed to retrieve a service with key %s", key)
+		glog.Warningf("Failed to retrieve a service with key %s", key)
+
 		return true
 	}
 	if !exist {
-		glog.V(4).Infof("Service with key %s does not exsit in the Indexer", key)
+		glog.Infof("Service with key %s does not exsit in the Indexer", key)
+
 		// Remove service from the indexer
 		snc.mapping.RemoveService(key)
 		return true
@@ -127,7 +130,8 @@ func (snc *SecureNamingController) processNextService() bool {
 	}
 	pods, err := snc.client.Pods(svc.Namespace).List(lo)
 	if err != nil {
-		glog.V(4).Infof("Failed to get pods for services")
+		glog.Errorf("Failed to get pods for services")
+		return true
 	}
 
 	accounts := []string{}
