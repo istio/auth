@@ -113,7 +113,8 @@ func TestProcessNextServices(t *testing.T) {
 		snc.processNextService()
 
 		if !reflect.DeepEqual(c.expectedMapping, snc.mapping.mapping) {
-			t.Errorf("Case %d failed: expecting the mapping to be %v but the actual mapping is %v", i, c.expectedMapping, snc.mapping.mapping)
+			t.Errorf("Case %d failed: expecting the mapping to be %v but the actual mapping is %v",
+				i, c.expectedMapping, snc.mapping.mapping)
 		}
 	}
 }
