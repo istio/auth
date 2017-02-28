@@ -41,4 +41,9 @@ install:
 
 script:
 - bazel test //...
+- bin/setup.sh # This must be run before linters and coverages.
 - bin/linters.sh
+- go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+- bash <(curl -s https://codecov.io/bash)
