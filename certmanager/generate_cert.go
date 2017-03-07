@@ -76,8 +76,8 @@ const (
 	tagURI     = 6
 	tarIP      = 7
 
-	// Prefix for Istio identities.
-	prefixIstioID = "istio:"
+	// The URI scheme for Istio identities.
+	uriSchemeIstio = "istio:"
 )
 
 // See http://www.alvestrand.no/objectid/2.5.29.17.html.
@@ -210,7 +210,7 @@ func buildSubjectAltNameExtension(host string) pkix.Extension {
 			rv = &asn1.RawValue{Tag: tarIP, Class: asn1.ClassContextSpecific, Bytes: ip}
 		} else {
 			tag := tagDNSName
-			if strings.HasPrefix(h, prefixIstioID) {
+			if strings.HasPrefix(h, uriSchemeIstio) {
 				// Use URI scheme for Istio identities
 				tag = tagURI
 			}
