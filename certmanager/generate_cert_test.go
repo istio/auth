@@ -15,9 +15,9 @@
 package certmanager
 
 import (
-	"encoding/pem"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/pem"
 	"reflect"
 	"strings"
 	"testing"
@@ -26,37 +26,37 @@ import (
 
 // VerifyFields contains the certficate fields to verify in the test.
 type VerifyFields struct {
-	notBefore time.Time
-	notAfter  time.Time
+	notBefore   time.Time
+	notAfter    time.Time
 	extKeyUsage x509.ExtKeyUsage
-	isCA		bool
-	org		string
+	isCA        bool
+	org         string
 }
 
 func TestGenCert(t *testing.T) {
 	now := time.Now()
-	nowInString := now.Format("Jan 2 15:04:05 2006")
+	nowInString := now.Format(timeLayout)
 	// Options to generate a CA cert.
 	caCertOptions := CertOptions{
-		Host: "test_ca.com",
-		ValidFrom: nowInString,
-		ValidFor: time.Hour * 24 * 30,
-		SignerCert: nil,
-		SignerPriv: nil,
-		Org: "MyOrg",
-		IsCA: true,
+		Host:         "test_ca.com",
+		ValidFrom:    nowInString,
+		ValidFor:     time.Hour * 24 * 30,
+		SignerCert:   nil,
+		SignerPriv:   nil,
+		Org:          "MyOrg",
+		IsCA:         true,
 		IsSelfSigned: true,
-		IsClient: false,
+		IsClient:     false,
 	}
-	notBefore, _ := time.Parse("Jan 2 15:04:05 2006", nowInString)
+	notBefore, _ := time.Parse(timeLayout, nowInString)
 	notAfter := notBefore.Add(caCertOptions.ValidFor)
 	caCertPem, caPrivPem := GenCert(caCertOptions)
 	verifyCert(t, caPrivPem, caCertPem, nil, caCertOptions.Host, VerifyFields{
-		notBefore: notBefore,
-		notAfter: notAfter,
+		notBefore:   notBefore,
+		notAfter:    notAfter,
 		extKeyUsage: x509.ExtKeyUsageServerAuth,
-		isCA: true,
-		org: "MyOrg",
+		isCA:        true,
+		org:         "MyOrg",
 	})
 
 	caCert, caPriv := loadSignerCreds(caCertPem, caPrivPem)
@@ -67,71 +67,71 @@ func TestGenCert(t *testing.T) {
 		{
 			// server cert with DNS as SAN
 			certOptions: CertOptions{
-				Host: "test_server.com",
-				ValidFrom: nowInString,
-				ValidFor: time.Hour * 24,
-				SignerCert: caCert,
-				SignerPriv: caPriv,
-				Org: "",
-				IsCA: false,
+				Host:         "test_server.com",
+				ValidFrom:    nowInString,
+				ValidFor:     time.Hour * 24,
+				SignerCert:   caCert,
+				SignerPriv:   caPriv,
+				Org:          "",
+				IsCA:         false,
 				IsSelfSigned: false,
-				IsClient: false,
+				IsClient:     false,
 			},
 		},
 		{
 			// client cert with DNS as SAN
 			certOptions: CertOptions{
-				Host: "test_client.com",
-				ValidFrom: nowInString,
-				ValidFor: time.Hour * 36,
-				SignerCert: caCert,
-				SignerPriv: caPriv,
-				Org: "",
-				IsCA: false,
+				Host:         "test_client.com",
+				ValidFrom:    nowInString,
+				ValidFor:     time.Hour * 36,
+				SignerCert:   caCert,
+				SignerPriv:   caPriv,
+				Org:          "",
+				IsCA:         false,
 				IsSelfSigned: false,
-				IsClient: true,
+				IsClient:     true,
 			},
 		},
 		{
 			// server cert with IP as SAN
 			certOptions: CertOptions{
-				Host: "1.2.3.4",
-				ValidFrom: nowInString,
-				ValidFor: time.Hour * 24,
-				SignerCert: caCert,
-				SignerPriv: caPriv,
-				Org: "",
-				IsCA: false,
+				Host:         "1.2.3.4",
+				ValidFrom:    nowInString,
+				ValidFor:     time.Hour * 24,
+				SignerCert:   caCert,
+				SignerPriv:   caPriv,
+				Org:          "",
+				IsCA:         false,
 				IsSelfSigned: false,
-				IsClient: false,
+				IsClient:     false,
 			},
 		},
 		{
 			// client cert with service account as SAN
 			certOptions: CertOptions{
-				Host: "istio:foo.serviceaccount.com",
-				ValidFrom: nowInString,
-				ValidFor: time.Hour * 100,
-				SignerCert: caCert,
-				SignerPriv: caPriv,
-				Org: "",
-				IsCA: false,
+				Host:         "istio:foo.serviceaccount.com",
+				ValidFrom:    nowInString,
+				ValidFor:     time.Hour * 100,
+				SignerCert:   caCert,
+				SignerPriv:   caPriv,
+				Org:          "",
+				IsCA:         false,
 				IsSelfSigned: false,
-				IsClient: true,
+				IsClient:     true,
 			},
 		},
 		{
 			// server cert with service account as SAN
 			certOptions: CertOptions{
-				Host: "istio:bar.serviceaccount.com",
-				ValidFrom: nowInString,
-				ValidFor: time.Hour * 50,
-				SignerCert: caCert,
-				SignerPriv: caPriv,
-				Org: "",
-				IsCA: false,
+				Host:         "istio:bar.serviceaccount.com",
+				ValidFrom:    nowInString,
+				ValidFor:     time.Hour * 50,
+				SignerCert:   caCert,
+				SignerPriv:   caPriv,
+				Org:          "",
+				IsCA:         false,
 				IsSelfSigned: false,
-				IsClient: false,
+				IsClient:     false,
 			},
 		},
 	}
@@ -147,11 +147,11 @@ func TestGenCert(t *testing.T) {
 			extKeyUsage = x509.ExtKeyUsageServerAuth
 		}
 		verifyCert(t, privPem, certPem, caCertPem, certOptions.Host, VerifyFields{
-			notBefore: notBefore,
-			notAfter: notAfter,
+			notBefore:   notBefore,
+			notAfter:    notAfter,
 			extKeyUsage: extKeyUsage,
-			isCA: false,
-			org: "MyOrg",
+			isCA:        false,
+			org:         "MyOrg",
 		})
 	}
 }
@@ -185,8 +185,8 @@ func verifyCert(t *testing.T, privPem []byte, certPem []byte, rootCertPem []byte
 		san = ""
 	}
 	opts := x509.VerifyOptions{
-		DNSName:	san,
-		Roots:		roots,
+		DNSName: san,
+		Roots:   roots,
 	}
 	opts.KeyUsages = append(opts.KeyUsages, x509.ExtKeyUsageAny)
 
@@ -207,11 +207,11 @@ func verifyCert(t *testing.T, privPem []byte, certPem []byte, rootCertPem []byte
 	}
 
 	certFields := VerifyFields{
-		notBefore: cert.NotBefore,
-		notAfter: cert.NotAfter,
+		notBefore:   cert.NotBefore,
+		notAfter:    cert.NotAfter,
 		extKeyUsage: cert.ExtKeyUsage[0],
-		isCA: cert.IsCA,
-		org: cert.Issuer.Organization[0],
+		isCA:        cert.IsCA,
+		org:         cert.Issuer.Organization[0],
 	}
 	if !reflect.DeepEqual(expectedFields, certFields) {
 		t.Errorf("{notBefore, notAfter, extKeyUsage, isCA, org}:")

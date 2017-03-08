@@ -78,6 +78,9 @@ const (
 
 	// The URI scheme for Istio identities.
 	uriScheme = "istio:"
+
+	// Layout for parsing time
+	timeLayout = "Jan 2 15:04:05 2006"
 )
 
 // See http://www.alvestrand.no/objectid/2.5.29.17.html.
@@ -158,7 +161,7 @@ func toFromDates(validFrom string, validFor time.Duration) (time.Time, time.Time
 		notBefore = time.Now()
 	} else {
 		var err error
-		notBefore, err = time.Parse("Jan 2 15:04:05 2006", validFrom)
+		notBefore, err = time.Parse(timeLayout, validFrom)
 		if err != nil {
 			log.Fatalf("Failed to parse creation date: %s\n", err)
 		}
