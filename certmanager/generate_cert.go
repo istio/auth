@@ -116,7 +116,7 @@ func GenCert(options CertOptions) ([]byte, []byte) {
 	return certPem, privPem
 }
 
-// LoadSignerCreds loads the signer cert&key from the given files.
+// LoadSignerCredsFromFiles loads the signer cert&key from the given files.
 //   signerCertFile: cert file name
 //   signerPrivFile: private key file name
 func LoadSignerCredsFromFiles(signerCertFile string, signerPrivFile string) (*x509.Certificate, *rsa.PrivateKey) {

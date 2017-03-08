@@ -156,7 +156,9 @@ func TestGenCert(t *testing.T) {
 	}
 }
 
-func verifyCert(t *testing.T, privPem []byte, certPem []byte, rootCertPem []byte, host string, expectedFields VerifyFields) {
+func verifyCert(
+	t *testing.T, privPem []byte, certPem []byte, rootCertPem []byte,
+	host string, expectedFields VerifyFields) {
 	roots := x509.NewCertPool()
 	var ok bool
 	if rootCertPem == nil {
@@ -190,7 +192,7 @@ func verifyCert(t *testing.T, privPem []byte, certPem []byte, rootCertPem []byte
 	}
 	opts.KeyUsages = append(opts.KeyUsages, x509.ExtKeyUsageAny)
 
-	if _, err := cert.Verify(opts); err != nil {
+	if _, err = cert.Verify(opts); err != nil {
 		t.Errorf("failed to verify certificate: " + err.Error())
 	}
 
@@ -215,8 +217,8 @@ func verifyCert(t *testing.T, privPem []byte, certPem []byte, rootCertPem []byte
 	}
 	if !reflect.DeepEqual(expectedFields, certFields) {
 		t.Errorf("{notBefore, notAfter, extKeyUsage, isCA, org}:")
-		t.Errorf("expected: %s", expectedFields)
-		t.Errorf("actual: %s", certFields)
+		t.Errorf("expected: %+v", expectedFields)
+		t.Errorf("actual: %+v", certFields)
 	}
 
 	if strings.HasPrefix(host, uriScheme) {
