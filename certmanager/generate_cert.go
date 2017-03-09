@@ -40,8 +40,8 @@ type CertOptions struct {
 	// like kubernetes service account.
 	Host string
 
-	// This certificate's validity start time formatted as
-	// Jan 1 15:04:05 2011.
+	// This certificate's validity start time. The start time must be formatted
+	// as the layout specified in certmanager.LayoutStartTime.
 	// If empty string, the validity start time is set to time.Now()
 	ValidFrom string
 
@@ -77,7 +77,7 @@ const (
 	tarIP      = 7
 
 	// The URI scheme for Istio identities.
-	uriScheme = "istio:"
+	uriScheme = "istio"
 
 	// Layout for parsing time
 	timeLayout = "Jan 2 15:04:05 2006"
@@ -129,25 +129,9 @@ func LoadSignerCredsFromFiles(signerCertFile string, signerPrivFile string) (*x5
 	if err != nil {
 		log.Fatalf("Reading private key file failed with error %s.", err)
 	}
-	return loadSignerCreds(signerCertBytes, signerPrivBytes)
-}
-
-func loadSignerCreds(signerCertBytes []byte, signerPrivBytes []byte) (*x509.Certificate, *rsa.PrivateKey) {
-	der, _ := pem.Decode(signerCertBytes)
-	if der == nil {
-		log.Fatalf("Invalid PEM encoding.")
-	}
-	signerCert, err := x509.ParseCertificate(der.Bytes)
-	if err != nil {
-		log.Fatalf("Certificate parsing failed with error %s.", err)
-	}
-
-	der, _ = pem.Decode(signerPrivBytes)
-	signerKey, err := x509.ParsePKCS1PrivateKey(der.Bytes)
-	if err != nil {
-		log.Fatalf("Private key parsing failed with error %s.", err)
-	}
-	return signerCert, signerKey
+	cert := parsePemEncodedCertificate(signerCertBytes)
+	key := parsePemEncodedPrivateKey(signerPrivBytes)
+	return cert, key
 }
 
 // toFromDates generates the certficiate validity period [notBefore, notAfter]
@@ -218,7 +202,7 @@ func buildSubjectAltNameExtension(host string) pkix.Extension {
 			rv = &asn1.RawValue{Tag: tarIP, Class: asn1.ClassContextSpecific, Bytes: ip}
 		} else {
 			tag := tagDNSName
-			if strings.HasPrefix(h, uriScheme) {
+			if strings.HasPrefix(h, uriScheme+":") {
 				// Use URI for Istio identities
 				tag = tagURI
 			}
