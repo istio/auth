@@ -19,6 +19,7 @@
 package certmanager
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -52,7 +53,7 @@ type CertOptions struct {
 	SignerCert *x509.Certificate
 
 	// Signer private key (PEM encoded).
-	SignerPriv *rsa.PrivateKey
+	SignerPriv crypto.PrivateKey
 
 	// Organization for this certificate.
 	Org string
@@ -98,7 +99,7 @@ func GenCert(options CertOptions) ([]byte, []byte) {
 		log.Fatalf("RSA key generation failed with error %s.", err)
 	}
 	template := genCertTemplate(options)
-	signerCert, signerKey := &template, priv
+	signerCert, signerKey := &template, crypto.PrivateKey(priv)
 	if !options.IsSelfSigned {
 		signerCert, signerKey = options.SignerCert, options.SignerPriv
 	}

@@ -15,7 +15,7 @@
 package certmanager
 
 import (
-	"crypto/rsa"
+	"crypto"
 	"crypto/x509"
 	"fmt"
 	"time"
@@ -36,7 +36,7 @@ type CertificateAuthority interface {
 // IstioCA generates keys and certificates for Istio identities.
 type IstioCA struct {
 	signerCert *x509.Certificate
-	signerKey  *rsa.PrivateKey
+	signerKey  crypto.PrivateKey
 }
 
 // NewSelfSignedIstioCA returns a new IstioCA instance using self-signed certificate.
@@ -57,7 +57,7 @@ func NewSelfSignedIstioCA() *IstioCA {
 }
 
 // NewIstioCA returns a new IstioCA instance.
-func NewIstioCA(cert *x509.Certificate, key *rsa.PrivateKey) *IstioCA {
+func NewIstioCA(cert *x509.Certificate, key crypto.PrivateKey) *IstioCA {
 	return &IstioCA{
 		signerCert: cert,
 		signerKey:  key,
