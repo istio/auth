@@ -26,8 +26,8 @@ func TestSelfSignedIstioCA(t *testing.T) {
 	name := "foo"
 	namespace := "bar"
 
-	cb, _ := ca.Generate(name, namespace)
-	cert := parsePemEncodedCertificate(cb)
+	cb, kb := ca.Generate(name, namespace)
+	cert, _ := parsePemEncodedCertificateAndKey(cb, kb)
 
 	foundSAN := false
 	for _, ee := range cert.Extensions {

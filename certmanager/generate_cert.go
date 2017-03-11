@@ -120,7 +120,7 @@ func GenCert(options CertOptions) ([]byte, []byte) {
 // LoadSignerCredsFromFiles loads the signer cert&key from the given files.
 //   signerCertFile: cert file name
 //   signerPrivFile: private key file name
-func LoadSignerCredsFromFiles(signerCertFile string, signerPrivFile string) (*x509.Certificate, *rsa.PrivateKey) {
+func LoadSignerCredsFromFiles(signerCertFile string, signerPrivFile string) (*x509.Certificate, crypto.PrivateKey) {
 	signerCertBytes, err := ioutil.ReadFile(signerCertFile)
 	if err != nil {
 		log.Fatalf("Reading cert file failed with error %s.", err)
@@ -130,9 +130,8 @@ func LoadSignerCredsFromFiles(signerCertFile string, signerPrivFile string) (*x5
 	if err != nil {
 		log.Fatalf("Reading private key file failed with error %s.", err)
 	}
-	cert := parsePemEncodedCertificate(signerCertBytes)
-	key := parsePemEncodedPrivateKey(signerPrivBytes)
-	return cert, key
+
+	return parsePemEncodedCertificateAndKey(signerCertBytes, signerPrivBytes)
 }
 
 // toFromDates generates the certficiate validity period [notBefore, notAfter]

@@ -50,8 +50,7 @@ func NewSelfSignedIstioCA() *IstioCA {
 		IsSelfSigned: true,
 	}
 	pemCert, pemKey := GenCert(options)
-	cert := parsePemEncodedCertificate(pemCert)
-	key := parsePemEncodedPrivateKey(pemKey)
+	cert, key := parsePemEncodedCertificateAndKey(pemCert, pemKey)
 
 	return NewIstioCA(cert, key)
 }
