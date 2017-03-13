@@ -16,6 +16,7 @@ go_test(
     srcs = [
         "ca_test.go",
         "generate_cert_test.go",
+        "util_test.go",
     ],
     library = ":go_default_library",
 )
