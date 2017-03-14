@@ -166,11 +166,19 @@ func genSerialNum() *big.Int {
 // genCertTemplate generates a certificate template with the given options.
 func genCertTemplate(options CertOptions) x509.Certificate {
 	notBefore, notAfter := toFromDates(options.ValidFrom, options.ValidFor)
+
+	keyUsage := x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment
+	if options.IsSelfSigned {
+		keyUsage |= x509.KeyUsageCertSign
+	}
+
 	extKeyUsage := x509.ExtKeyUsageServerAuth
 	if options.IsClient {
 		extKeyUsage = x509.ExtKeyUsageClientAuth
 	}
+
 	sanExt := buildSubjectAltNameExtension(options.Host)
+
 	template := x509.Certificate{
 		SerialNumber: genSerialNum(),
 		Subject: pkix.Name{
@@ -178,7 +186,7 @@ func genCertTemplate(options CertOptions) x509.Certificate {
 		},
 		NotBefore:             notBefore,
 		NotAfter:              notAfter,
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		KeyUsage:              keyUsage,
 		ExtKeyUsage:           []x509.ExtKeyUsage{extKeyUsage},
 		BasicConstraintsValid: true,
 		ExtraExtensions:       []pkix.Extension{sanExt},
