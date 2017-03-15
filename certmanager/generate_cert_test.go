@@ -56,7 +56,7 @@ func TestGenCert(t *testing.T) {
 		notBefore:   notBefore,
 		notAfter:    notAfter,
 		extKeyUsage: x509.ExtKeyUsageServerAuth,
-		keyUsage:    x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		keyUsage:    x509.KeyUsageCertSign,
 		isCA:        true,
 		org:         "MyOrg",
 	})

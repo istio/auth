@@ -167,9 +167,13 @@ func genSerialNum() *big.Int {
 func genCertTemplate(options CertOptions) x509.Certificate {
 	notBefore, notAfter := toFromDates(options.ValidFrom, options.ValidFor)
 
-	keyUsage := x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment
-	if options.IsSelfSigned {
-		keyUsage |= x509.KeyUsageCertSign
+	var keyUsage x509.KeyUsage
+	if options.IsCA {
+		// If the cert is a CA cert, the private key is allowed to sign other certificate.
+		keyUsage = x509.KeyUsageCertSign
+	} else {
+		// Otherwise the private key is allowed for digital signature and key encipherment.
+		keyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment
 	}
 
 	extKeyUsage := x509.ExtKeyUsageServerAuth
