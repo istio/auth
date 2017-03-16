@@ -18,6 +18,6 @@ docker_build(
         "/usr/local/bin/istio_ca",
         "-self-signed-ca",
     ],
-    name = "istio_ca",
+    name = "istio-ca",
     tars = [ "istio_ca_tar" ],
 )

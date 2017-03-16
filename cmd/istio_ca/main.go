@@ -33,7 +33,7 @@ var (
 		"Specifies path to kubeconfig file. This must be specified when not running inside a Kubernetes pod.")
 	selfSignedCA = flag.Bool("self-signed-ca", false,
 		"Indicates whether to use auto-generated self-signed CA certificate. "+
-			"When set to true, the '-ca-cert' and '-ca-key' options are ignored")
+			"When set to true, the '-ca-cert' and '-ca-key' options are ignored.")
 )
 
 func main() {
@@ -95,10 +95,12 @@ func verifyCommandLineOptions() {
 	}
 
 	if *caCertFile == "" {
-		glog.Fatalf("No CA cert has been specified. Either specify a cert file via '-ca-cert' option or use '-self-signed-ca'")
+		glog.Fatalf(
+			"No CA cert has been specified. Either specify a cert file via '-ca-cert' option or use '-self-signed-ca'")
 	}
 
 	if *caKeyFile == "" {
-		glog.Fatalf("No CA key has been specified. Either specify a key file via '-ca-key' option or use '-self-signed-ca'")
+		glog.Fatalf(
+			"No CA key has been specified. Either specify a key file via '-ca-key' option or use '-self-signed-ca'")
 	}
 }
