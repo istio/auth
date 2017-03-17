@@ -33,6 +33,10 @@ func (ca fakeCa) Generate(name, namespace string) (cert, key []byte) {
 	return
 }
 
+func (ca fakeCa) GetRootCertificate() []byte {
+	return []byte("fake root cert")
+}
+
 func createSecret(name string) *v1.Secret {
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
