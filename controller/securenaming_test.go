@@ -199,10 +199,7 @@ func TestGetPodServices(t *testing.T) {
 		actualServices := snc.getPodServices(testCase.pod)
 		sort.Sort(sortableServices(actualServices))
 
-		expectedServices := testCase.expectedServices
-		sort.Sort(sortableServices(expectedServices))
-
-		if !reflect.DeepEqual(actualServices, expectedServices) {
+		if !reflect.DeepEqual(actualServices, testCase.expectedServices) {
 			t.Errorf("Case %d failed: Actual services does not match expected services\n", ind)
 		}
 	}
