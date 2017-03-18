@@ -65,7 +65,6 @@ func NewSelfSignedIstioCA() (*IstioCA, error) {
 	pemCert, pemKey := GenCert(options)
 
 	opts := &IstioCAOptions{
-		CertChainBytes:   pemCert,
 		SigningCertBytes: pemCert,
 		SigningKeyBytes:  pemKey,
 		RootCertBytes:    pemCert,

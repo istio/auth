@@ -27,8 +27,8 @@ import (
 
 type fakeCa struct{}
 
-func (ca fakeCa) Generate(name, namespace string) (cert, key []byte) {
-	cert = []byte("fake cert")
+func (ca fakeCa) Generate(name, namespace string) (chain, key []byte) {
+	chain = []byte("fake cert chain")
 	key = []byte("fake key")
 	return
 }
@@ -41,8 +41,9 @@ func createSecret(name string) *v1.Secret {
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Data: map[string][]byte{
-			"key":  []byte("fake key"),
-			"cert": []byte("fake cert"),
+			"cert-chain.pem": []byte("fake cert chain"),
+			"key.pem":        []byte("fake key"),
+			"root-cert.pem":  []byte("fake root cert"),
 		},
 	}
 }
