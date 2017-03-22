@@ -118,7 +118,10 @@ func TestSecretController(t *testing.T) {
 		controller := NewSecretController(fakeCa{}, client.CoreV1())
 
 		if tc.existingSecret != nil {
-			controller.scrtStore.Add(tc.existingSecret)
+			err := controller.scrtStore.Add(tc.existingSecret)
+			if err != nil {
+				t.Errorf("Failed to add a secret (error %v)", err)
+			}
 		}
 
 		if tc.saToAdd != nil {

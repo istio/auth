@@ -74,7 +74,8 @@ func NewSecretController(ca certmanager.CertificateAuthority, core corev1.CoreV1
 			return core.Secrets(metav1.NamespaceAll).Watch(options)
 		},
 	}
-	c.scrtStore, c.scrtController = cache.NewInformer(secretlw, &v1.Secret{}, time.Minute, cache.ResourceEventHandlerFuncs{})
+	c.scrtStore, c.scrtController =
+		cache.NewInformer(secretlw, &v1.Secret{}, time.Minute, cache.ResourceEventHandlerFuncs{})
 
 	return c
 }
