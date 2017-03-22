@@ -36,10 +36,14 @@ const secretNamePrefix = "istio."
 
 // SecretController manages the service accounts' secrets that contains Istio keys and certificates.
 type SecretController struct {
-	ca             certmanager.CertificateAuthority
-	core           corev1.CoreV1Interface
-	saController   cache.Controller
-	saStore        cache.Store
+	ca   certmanager.CertificateAuthority
+	core corev1.CoreV1Interface
+
+	// Controller and store for service account objects.
+	saController cache.Controller
+	saStore      cache.Store
+
+	// Controller and store for secret objects.
 	scrtController cache.Controller
 	scrtStore      cache.Store
 }
@@ -51,7 +55,7 @@ func NewSecretController(ca certmanager.CertificateAuthority, core corev1.CoreV1
 		core: core,
 	}
 
-	salw := &cache.ListWatch{
+	saLW := &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 			return core.ServiceAccounts(metav1.NamespaceAll).List(options)
 		},
@@ -64,9 +68,9 @@ func NewSecretController(ca certmanager.CertificateAuthority, core corev1.CoreV1
 		DeleteFunc: c.deleteFunc,
 		UpdateFunc: c.updateFunc,
 	}
-	c.saStore, c.saController = cache.NewInformer(salw, &v1.ServiceAccount{}, time.Minute, rehf)
+	c.saStore, c.saController = cache.NewInformer(saLW, &v1.ServiceAccount{}, time.Minute, rehf)
 
-	secretlw := &cache.ListWatch{
+	scrtLW := &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 			return core.Secrets(metav1.NamespaceAll).List(options)
 		},
@@ -75,7 +79,7 @@ func NewSecretController(ca certmanager.CertificateAuthority, core corev1.CoreV1
 		},
 	}
 	c.scrtStore, c.scrtController =
-		cache.NewInformer(secretlw, &v1.Secret{}, time.Minute, cache.ResourceEventHandlerFuncs{})
+		cache.NewInformer(scrtLW, &v1.Secret{}, time.Minute, cache.ResourceEventHandlerFuncs{})
 
 	return c
 }
@@ -89,7 +93,7 @@ func (sc *SecretController) Run(stopCh chan struct{}) {
 
 func (sc *SecretController) addFunc(obj interface{}) {
 	acct := obj.(*v1.ServiceAccount)
-	sc.createOrUpdateSecret(acct.GetName(), acct.GetNamespace())
+	sc.upsertSecret(acct.GetName(), acct.GetNamespace())
 }
 
 func (sc *SecretController) deleteFunc(obj interface{}) {
@@ -113,14 +117,14 @@ func (sc *SecretController) updateFunc(oldObj, curObj interface{}) {
 	// We only care the name and namespace of a service account.
 	if curName != oldName || curNamespace != oldNamespace {
 		sc.deleteSecret(oldName, oldNamespace)
-		sc.createOrUpdateSecret(curName, curNamespace)
+		sc.upsertSecret(curName, curNamespace)
 
 		glog.Infof("Service account \"%s\" in namespace \"%s\" has been updated to \"%s\" in namespace \"%s\"",
 			oldName, oldNamespace, curName, curNamespace)
 	}
 }
 
-func (sc *SecretController) createOrUpdateSecret(saName, saNamespace string) {
+func (sc *SecretController) upsertSecret(saName, saNamespace string) {
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      getSecretName(saName),
