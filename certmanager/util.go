@@ -22,8 +22,9 @@ import (
 	"github.com/golang/glog"
 )
 
-// Given a PEM-encoded certificate, construct a `x509.Certificate` object.
-func parsePemEncodedCertificate(certBytes []byte) *x509.Certificate {
+// ParsePemEncodedCertificate constructs a `x509.Certificate` object using the
+// given a PEM-encoded certificate,
+func ParsePemEncodedCertificate(certBytes []byte) *x509.Certificate {
 	cb, _ := pem.Decode(certBytes)
 	if cb == nil {
 		glog.Fatalf("Invalid PEM encoding for the certificate: %s", certBytes)
@@ -35,9 +36,9 @@ func parsePemEncodedCertificate(certBytes []byte) *x509.Certificate {
 	return cert
 }
 
-// Given a PEM-encoded key, parse the bytes into a `crypto.PrivateKey`
-// according to the provided `x509.PublicKeyAlgorithm`.
-func parsePemEncodedKey(algo x509.PublicKeyAlgorithm, keyBytes []byte) crypto.PrivateKey {
+// ParsePemEncodedKey parses the bytes into a `crypto.PrivateKey`, according to
+// the provided `x509.PublicKeyAlgorithm` and the given a PEM-encoded key.
+func ParsePemEncodedKey(algo x509.PublicKeyAlgorithm, keyBytes []byte) crypto.PrivateKey {
 	kb, _ := pem.Decode(keyBytes)
 	if kb == nil {
 		glog.Fatalf("Invalid PEM encoding for the key: %s", keyBytes)
