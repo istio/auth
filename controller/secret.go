@@ -32,11 +32,10 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+/* #nosec: disable gas linter */
 const (
-	/* #nosec: disable gas linter */
 	secretNamePrefix = "istio."
-
-	istioSecretType = "istio.io/key-and-cert"
+	istioSecretType  = "istio.io/key-and-cert"
 )
 
 // SecretController manages the service accounts' secrets that contains Istio keys and certificates.
