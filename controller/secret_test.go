@@ -39,15 +39,16 @@ func (ca fakeCa) GetRootCertificate() []byte {
 
 func createSecret(name, namespace string) *v1.Secret {
 	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
 		Data: map[string][]byte{
 			"cert-chain.pem": []byte("fake cert chain"),
 			"key.pem":        []byte("fake key"),
 			"root-cert.pem":  []byte("fake root cert"),
 		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Type: istioSecretType,
 	}
 }
 
@@ -125,13 +126,13 @@ func TestSecretController(t *testing.T) {
 		}
 
 		if tc.saToAdd != nil {
-			controller.addFunc(tc.saToAdd)
+			controller.saAdded(tc.saToAdd)
 		}
 		if tc.saToDelete != nil {
-			controller.deleteFunc(tc.saToDelete)
+			controller.saDeleted(tc.saToDelete)
 		}
 		if tc.sasToUpdate != nil {
-			controller.updateFunc(tc.sasToUpdate.oldSa, tc.sasToUpdate.curSa)
+			controller.saUpdated(tc.sasToUpdate.oldSa, tc.sasToUpdate.curSa)
 		}
 
 		actions := client.Actions()

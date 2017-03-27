@@ -16,6 +16,7 @@ package controller
 
 import (
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -24,6 +25,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -31,8 +33,14 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-/* #nosec: disable gas linter */
-const secretNamePrefix = "istio."
+const (
+	/* #nosec: disable gas linter */
+	secretNamePrefix = "istio."
+
+	istioSecretType = "istio.io/key-and-cert"
+
+	secretResyncPeriod = 10 * time.Second
+)
 
 // SecretController manages the service accounts' secrets that contains Istio keys and certificates.
 type SecretController struct {
@@ -64,22 +72,27 @@ func NewSecretController(ca certmanager.CertificateAuthority, core corev1.CoreV1
 		},
 	}
 	rehf := cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.addFunc,
-		DeleteFunc: c.deleteFunc,
-		UpdateFunc: c.updateFunc,
+		AddFunc:    c.saAdded,
+		DeleteFunc: c.saDeleted,
+		UpdateFunc: c.saUpdated,
 	}
 	c.saStore, c.saController = cache.NewInformer(saLW, &v1.ServiceAccount{}, time.Minute, rehf)
 
+	istioSecretSelector := fields.SelectorFromSet(map[string]string{"type": istioSecretType}).String()
 	scrtLW := &cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			options.FieldSelector = istioSecretSelector
 			return core.Secrets(metav1.NamespaceAll).List(options)
 		},
 		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			options.FieldSelector = istioSecretSelector
 			return core.Secrets(metav1.NamespaceAll).Watch(options)
 		},
 	}
 	c.scrtStore, c.scrtController =
-		cache.NewInformer(scrtLW, &v1.Secret{}, time.Minute, cache.ResourceEventHandlerFuncs{})
+		cache.NewInformer(scrtLW, &v1.Secret{}, secretResyncPeriod, cache.ResourceEventHandlerFuncs{
+			UpdateFunc: c.istioSecretUpdated,
+		})
 
 	return c
 }
@@ -91,17 +104,17 @@ func (sc *SecretController) Run(stopCh chan struct{}) {
 	<-stopCh
 }
 
-func (sc *SecretController) addFunc(obj interface{}) {
+func (sc *SecretController) saAdded(obj interface{}) {
 	acct := obj.(*v1.ServiceAccount)
 	sc.upsertSecret(acct.GetName(), acct.GetNamespace())
 }
 
-func (sc *SecretController) deleteFunc(obj interface{}) {
+func (sc *SecretController) saDeleted(obj interface{}) {
 	acct := obj.(*v1.ServiceAccount)
 	sc.deleteSecret(acct.GetName(), acct.GetNamespace())
 }
 
-func (sc *SecretController) updateFunc(oldObj, curObj interface{}) {
+func (sc *SecretController) saUpdated(oldObj, curObj interface{}) {
 	if reflect.DeepEqual(oldObj, curObj) {
 		// Nothing is changed. The method is invoked by periodical re-sync with the apiserver.
 		return
@@ -130,6 +143,7 @@ func (sc *SecretController) upsertSecret(saName, saNamespace string) {
 			Name:      getSecretName(saName),
 			Namespace: saNamespace,
 		},
+		Type: istioSecretType,
 	}
 
 	_, exists, err := sc.scrtStore.Get(secret)
@@ -170,6 +184,38 @@ func (sc *SecretController) deleteSecret(saName, saNamespace string) {
 
 	glog.Errorf("Failed to delete Istio secret for service account \"%s\" in namespace \"%s\" (error: %s)",
 		saName, saNamespace, err)
+}
+
+func (sc *SecretController) istioSecretUpdated(oldObj, newObj interface{}) {
+	scrt, ok := newObj.(*v1.Secret)
+	if !ok {
+		glog.Warning("Failed to convert to secret object: %v", newObj)
+		return
+	}
+
+	certBytes := scrt.Data["cert-chain.pem"]
+	cert := certmanager.ParsePemEncodedCertificate(certBytes)
+	ttl := cert.NotAfter.Sub(time.Now())
+	if ttl.Seconds() < secretResyncPeriod.Seconds() {
+		glog.Infof("Certificate is about to expire, we should refresh it")
+
+		// TODO: trimming sounds hacky and unreliable, lets find a better way.
+		saName := strings.TrimPrefix(scrt.GetName(), secretNamePrefix)
+		saNamespace := scrt.GetNamespace()
+
+		// Now we know the secret does not exist yet. So we create a new one.
+		chain, key := sc.ca.Generate(saName, saNamespace)
+		rootCert := sc.ca.GetRootCertificate()
+		scrt.Data = map[string][]byte{
+			"cert-chain.pem": chain,
+			"key.pem":        key,
+			"root-cert.pem":  rootCert,
+		}
+		_, err := sc.core.Secrets(saNamespace).Update(scrt)
+		if err != nil {
+			glog.Errorf("Failed to update secret %s/%s (error: %s)", saNamespace, saName, err)
+		}
+	}
 }
 
 func getSecretName(saName string) string {

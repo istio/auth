@@ -127,8 +127,8 @@ func LoadSignerCredsFromFiles(signerCertFile string, signerPrivFile string) (*x5
 		glog.Fatalf("Reading private key file failed with error %s.", err)
 	}
 
-	cert := parsePemEncodedCertificate(signerCertBytes)
-	key := parsePemEncodedKey(cert.PublicKeyAlgorithm, signerPrivBytes)
+	cert := ParsePemEncodedCertificate(signerCertBytes)
+	key := ParsePemEncodedKey(cert.PublicKeyAlgorithm, signerPrivBytes)
 
 	return cert, key
 }
