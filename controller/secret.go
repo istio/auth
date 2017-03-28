@@ -201,7 +201,7 @@ func (sc *SecretController) scrtUpdated(oldObj, newObj interface{}) {
 
 	certBytes := scrt.Data[certChainSecretKey]
 	cert := certmanager.ParsePemEncodedCertificate(certBytes)
-	ttl := time.Until(cert.NotAfter)
+	ttl := cert.NotAfter.Sub(time.Now())
 	if ttl.Seconds() < secretResyncPeriod.Seconds() {
 		glog.Infof("Certificate %s is about to expire, refreshing it", scrt.GetName())
 
