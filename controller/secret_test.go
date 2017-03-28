@@ -43,9 +43,9 @@ func (ca fakeCa) GetRootCertificate() []byte {
 func createSecret(saName, scrtName, namespace string) *v1.Secret {
 	return &v1.Secret{
 		Data: map[string][]byte{
-			certChainSecretKey:  []byte("fake cert chain"),
-			privateKeySecretKey: []byte("fake key"),
-			rootCertSecretKey:   []byte("fake root cert"),
+			certChainID:  []byte("fake cert chain"),
+			privateKeyID: []byte("fake key"),
+			rootCertID:   []byte("fake root cert"),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{"istio.io/service-account.name": saName},
@@ -179,7 +179,7 @@ func TestUpdateExpiringSecret(t *testing.T) {
 			RSAKeySize:   512,
 		}
 		bs, _ := certmanager.GenCert(opts)
-		scrt.Data[certChainSecretKey] = bs
+		scrt.Data[certChainID] = bs
 
 		controller.scrtUpdated(nil, scrt)
 

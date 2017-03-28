@@ -40,9 +40,9 @@ const (
 
 	serviceAccountNameAnnotationKey = "istio.io/service-account.name"
 
-	certChainSecretKey  = "cert-chain.pem"
-	privateKeySecretKey = "key.pem"
-	rootCertSecretKey   = "root-cert.pem"
+	certChainID  = "cert-chain.pem"
+	privateKeyID = "key.pem"
+	rootCertID   = "root-cert.pem"
 )
 
 // SecretController manages the service accounts' secrets that contains Istio keys and certificates.
@@ -167,9 +167,9 @@ func (sc *SecretController) upsertSecret(saName, saNamespace string) {
 	chain, key := sc.ca.Generate(saName, saNamespace)
 	rootCert := sc.ca.GetRootCertificate()
 	secret.Data = map[string][]byte{
-		certChainSecretKey:  chain,
-		privateKeySecretKey: key,
-		rootCertSecretKey:   rootCert,
+		certChainID:  chain,
+		privateKeyID: key,
+		rootCertID:   rootCert,
 	}
 	_, err = sc.core.Secrets(saNamespace).Create(secret)
 	if err != nil {
@@ -199,7 +199,7 @@ func (sc *SecretController) scrtUpdated(oldObj, newObj interface{}) {
 		return
 	}
 
-	certBytes := scrt.Data[certChainSecretKey]
+	certBytes := scrt.Data[certChainID]
 	cert := certmanager.ParsePemEncodedCertificate(certBytes)
 	ttl := cert.NotAfter.Sub(time.Now())
 	if ttl.Seconds() < secretResyncPeriod.Seconds() {
@@ -209,8 +209,8 @@ func (sc *SecretController) scrtUpdated(oldObj, newObj interface{}) {
 		saNamespace := scrt.GetNamespace()
 
 		chain, key := sc.ca.Generate(saName, saNamespace)
-		scrt.Data[certChainSecretKey] = chain
-		scrt.Data[privateKeySecretKey] = key
+		scrt.Data[certChainID] = chain
+		scrt.Data[privateKeyID] = key
 
 		_, err := sc.core.Secrets(saNamespace).Update(scrt)
 		if err != nil {
