@@ -17,6 +17,10 @@ mainFlow(utils) {
     bazel.setVars()
   }
 
+  if (utils.runStage('PRESUBMIT')) {
+    presubmit(gitUtils, bazel, utils)
+  }
+
   if (utils.runStage('POSTSUBMIT')) {
     postsubmit(gitUtils, bazel, utils)
   }
@@ -32,3 +36,29 @@ def postsubmit(gitUtils, bazel, utils) {
     }
   }
 }
+
+def presubmit(gitUtils, bazel, utils) {
+  goBuildNode(gitUtils, 'istio.io/mixer') {
+    bazel.updateBazelRc()
+    stage('Bazel Build') {
+      sh('bin/install-prereqs.sh')
+      bazel.fetch('-k //...')
+      bazel.build('//...')
+    }
+    stage('Go Build') {
+      sh('bin/setup.sh')
+    }
+    stage('Bazel Tests') {
+      bazel.test('//...')
+    }
+    stage('Code Check') {
+      sh('bin/linters.sh')
+      sh('bin/headers.sh')
+    }
+    stage('Code Coverage') {
+      sh('bin/codecov.sh')
+      utils.publishCodeCoverage('AUTH_CODECOV_TOKEN')
+    }
+  }
+}
+
