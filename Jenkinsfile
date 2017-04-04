@@ -38,7 +38,7 @@ def postsubmit(gitUtils, bazel, utils) {
 }
 
 def presubmit(gitUtils, bazel, utils) {
-  goBuildNode(gitUtils, 'istio.io/mixer') {
+  goBuildNode(gitUtils, 'istio.io/auth') {
     bazel.updateBazelRc()
     stage('Bazel Build') {
       sh('bin/install-prereqs.sh')
