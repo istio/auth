@@ -56,7 +56,7 @@ def presubmit(gitUtils, bazel, utils) {
       sh('bin/headers.sh')
     }
     stage('Code Coverage') {
-      sh('bin/codecov.sh')
+      sh('bin/coverage.sh')
       utils.publishCodeCoverage('AUTH_CODECOV_TOKEN')
     }
   }
