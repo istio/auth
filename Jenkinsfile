@@ -61,4 +61,3 @@ def presubmit(gitUtils, bazel, utils) {
     }
   }
 }
-
