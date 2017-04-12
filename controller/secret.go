@@ -60,7 +60,9 @@ type SecretController struct {
 }
 
 // NewSecretController returns a pointer to a newly constructed SecretController instance.
-func NewSecretController(ca certmanager.CertificateAuthority, core corev1.CoreV1Interface, namespace string) *SecretController {
+func NewSecretController(ca certmanager.CertificateAuthority, core corev1.CoreV1Interface,
+	namespace string) *SecretController {
+
 	c := &SecretController{
 		ca:   ca,
 		core: core,
