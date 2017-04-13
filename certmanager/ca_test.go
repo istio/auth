@@ -49,7 +49,7 @@ func TestSelfSignedIstioCA(t *testing.T) {
 	}
 
 	rootCert := ParsePemEncodedCertificate(rcb)
-	if ttl := rootCert.NotAfter.Sub(cert.NotBefore); ttl != caCertTTL {
+	if ttl := rootCert.NotAfter.Sub(rootCert.NotBefore); ttl != caCertTTL {
 		t.Errorf("Unexpected CA certificate TTL (expecting %v, actual %v)", caCertTTL, ttl)
 	}
 
