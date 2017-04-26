@@ -228,7 +228,7 @@ new_http_archive(
 
 
 ##
-## Repo(s) containing utilities for testing
+## Repo containing utilities for testing
 ##
 
 git_repository(
