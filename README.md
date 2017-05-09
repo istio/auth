@@ -17,7 +17,7 @@ Istio Auth aims at enhancing the security of microservices and their communicati
 ## Architecture
 Figure 1 shows the Istio Auth architecture, which includes three important components: identity, key management, and communication security. This diagram describes how Istio Auth is used to secure the service-to-service communication between service A running as the service account “foo” and service B running as the service account “bar”.
 
-![workflow](https://cdn.rawgit.com/wattli/auth/master/workflow.svg)
+![workflow](https://cdn.rawgit.com/wattli/auth/master/overview.svg)
 
 ## Components
 
