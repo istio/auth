@@ -34,11 +34,13 @@ var (
 	// Command prints version info to stdout
 	Command = &cobra.Command{
 		Run: func(*cobra.Command, []string) {
-			printFunc("Version: %v\n", version)
-			printFunc("GitRevision: %v\n", gitRevision)
-			printFunc("GitBranch: %v\n", gitBranch)
-			printFunc("User: %v@%v\n", user, host)
-			printFunc("Golang version: %v\n", runtime.Version())
+			// nolint: errcheck,gas
+			printFunc(`Version: %v
+GitRevision: %v
+GitBranch: %v
+User: %v@%v
+Golang version: %v
+`, version, gitRevision, gitBranch, user, host, runtime.Version())
 		},
 		Use:   "version",
 		Short: "Display version information",
