@@ -152,7 +152,7 @@ running by other teams.
 ## Future Work
 
 - Fine-grained authorization and auditing
-- Secure Istio components (mixer, discovery service, etc.)
+- Secure Istio components (Mixer, Istio-Manager, etc.)
 - Inter-cluster service-to-service authentication
 - End-user to service authentication using JWT/OAuth2/OpenID_Connect
 - Support GCP service account and AWS service account
