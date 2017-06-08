@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,8 +60,7 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		glog.Error(err)
-		os.Exit(-1)
+		glog.Fatal(err)
 	}
 }
 
@@ -75,8 +73,7 @@ func initializeIntegrationTest(cmd *cobra.Command, args []string) {
 
 func runTests(cmd *cobra.Command, args []string) {
 	// Test the existence of istio.default.secret.
-	_, err := waitForSecretExist("istio.default", 20*time.Second)
-	if err != nil {
+	if _, err := waitForSecretExist("istio.default", 20*time.Second); err != nil {
 		glog.Fatal(err)
 	} else {
 		glog.Infof(`Secret "istio.default" is correctly created`)
@@ -90,12 +87,12 @@ func cleanUpIntegrationTest(cmd *cobra.Command, args []string) {
 func createClientset(kubeconfig string) *kubernetes.Clientset {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		glog.Errorf("failed to create config object from kube-config file: %q (error: %v)", kubeconfig, err)
+		glog.Fatalf("failed to create config object from kube-config file: %q (error: %v)", kubeconfig, err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		glog.Errorf("failed to create clientset object (error: %v)", err)
+		glog.Fatalf("failed to create clientset object (error: %v)", err)
 	}
 
 	return clientset
@@ -109,7 +106,7 @@ func createTestNamespace(clientset kubernetes.Interface) string {
 	}
 	namespace, err := clientset.Core().Namespaces().Create(template)
 	if err != nil {
-		glog.Errorf("failed to create a namespace (error: %v)", err)
+		glog.Fatalf("failed to create a namespace (error: %v)", err)
 	}
 
 	name := namespace.GetName()
@@ -120,7 +117,7 @@ func createTestNamespace(clientset kubernetes.Interface) string {
 func deleteTestNamespace(clientset kubernetes.Interface) {
 	name := opts.namespace
 	if err := clientset.Core().Namespaces().Delete(name, &metav1.DeleteOptions{}); err != nil {
-		glog.Errorf("failed to delete namespace %q (error: %v)", name, err)
+		glog.Fatalf("failed to delete namespace %q (error: %v)", name, err)
 	}
 	glog.Infof("Namespace %v is deleted", name)
 }
@@ -152,7 +149,7 @@ func deployIstioCA(clientset kubernetes.Interface) {
 	}
 
 	if _, err := clientset.Core().Pods(opts.namespace).Create(pod); err != nil {
-		glog.Errorf("failed to deploy Istio CA (error: %v)", err)
+		glog.Fatalf("failed to deploy Istio CA (error: %v)", err)
 	}
 
 	if err := waitForPodRunning(uuid, 60*time.Second); err != nil {
