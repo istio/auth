@@ -15,6 +15,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"time"
 
@@ -59,6 +60,12 @@ func init() {
 }
 
 func main() {
+	// HACKHACK: let `flag.Parsed()` return true to prevent glog from emitting errors
+	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
+	if err := flag.CommandLine.Parse([]string{}); err != nil {
+		glog.Fatal(err)
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		glog.Fatal(err)
 	}
