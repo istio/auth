@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package proto
+package proto;
 
 // Service definition of IstioCAService that can dynamically verify the CSR for
 // service identities for Istio services running on various platforms and
@@ -27,7 +27,7 @@ service IstioClusterCAService {
   // The CSR is generated on the Node Agent along with the private key. The Node
   // Agent also needs to provide its credentials so the CA can verify the Node
   // Agent requesting the credentials.
-  rpc Sign(CertificateSignRequest) returns (CertificateSignResponse)
+  rpc Sign(CertificateSignRequest) returns (CertificateSignResponse);
 }
 
 message CertificateSignRequest {
@@ -54,10 +54,10 @@ message OnPremNodeCredential {
 message CertificateSignResponse {
   bool is_approved = 1;
   Error error = 2;
-  bytes signed_cert;
+  bytes signed_cert = 3;
 }
 
 message Error {
-  int code = 1;
+  int32 code = 1;
   string reason = 2;
 }
