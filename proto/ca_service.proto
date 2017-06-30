@@ -47,8 +47,7 @@ message GcpInstanceCredential {
 }
 
 message OnPremNodeCredential {
-  bytes node_identity_cert = 1;
-  bytes cert_chain = 2;
+  bytes node_identity_cert_chain = 2;
 }
 
 message CertificateSignResponse {
