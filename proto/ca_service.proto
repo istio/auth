@@ -20,7 +20,7 @@ package proto;
 // service identities for Istio services running on various platforms and
 // approve or disapprove the request after verifying the Node Agent credentials
 // provided as a part of the Certificte Signing Request.
-service IstioClusterCAService {
+service IstioCAService {
 
   // Request to sign a Certificate Signing Request.
   //
