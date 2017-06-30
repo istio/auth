@@ -38,16 +38,11 @@ message CertificateSignRequest {
 message NodeAgentCredentials {
   oneof node_credential {
     GcpInstanceCredential gcp_instance_credential = 1;
-    OnPremNodeCredential on_prem_node_credential = 2;
   }
 }
 
 message GcpInstanceCredential {
   bytes signed_instance_metadata = 1;
-}
-
-message OnPremNodeCredential {
-  bytes node_identity_cert_chain = 2;
 }
 
 message CertificateSignResponse {
