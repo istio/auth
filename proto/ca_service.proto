@@ -13,8 +13,9 @@
 // limitations under the License.
 
 syntax = "proto3";
+import "google/rpc/status.proto";
 
-package proto;
+package istio.v1.auth;
 
 // Service definition of IstioCAService that can dynamically verify the CSR for
 // service identities for Istio services running on various platforms and
@@ -47,11 +48,6 @@ message GcpInstanceCredential {
 
 message CertificateSignResponse {
   bool is_approved = 1;
-  Error error = 2;
+  google.rpc.Status status = 2;
   bytes signed_cert_chain = 3;
-}
-
-message Error {
-  int32 code = 1;
-  string reason = 2;
 }
