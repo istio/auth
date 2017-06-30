@@ -4,6 +4,9 @@ git_repository(
     remote = "https://github.com/bazelbuild/rules_go.git",
 )
 
+load("@io_bazel_rules_go//proto:go_proto_library.bzl", "go_proto_repositories")
+go_proto_repositories()
+
 load("@io_bazel_rules_go//go:def.bzl", "go_repositories", "new_go_repository")
 
 go_repositories()
@@ -260,3 +263,4 @@ git_repository(
     commit = "9a3ac467ba862432c75e42cecff7aa5c2980e3b8",   # Jun 18, 2017
     remote = "https://github.com/istio/test-infra.git",
 )
+
