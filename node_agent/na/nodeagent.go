@@ -15,14 +15,15 @@
 package na
 
 import (
+	"io/ioutil"
+	"time"
+
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"io/ioutil"
 	"istio.io/auth/certmanager"
 	pb "istio.io/auth/proto"
-	"time"
 )
 
 // Config is Node agent configuration that is provided from CLI.
