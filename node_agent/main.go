@@ -16,6 +16,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/golang/glog"
 	"istio.io/auth/node_agent/na"
 )
