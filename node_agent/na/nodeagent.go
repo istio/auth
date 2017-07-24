@@ -111,10 +111,15 @@ func (na *nodeAgentInternal) invokeGrpc() (bool, []byte, *pb.CertificateSignResp
 	dialOption := grpc.WithTransportCredentials(transportCreds)
 	conn, err := grpc.Dial(*na.config.IstioCAAddress, dialOption)
 	if err != nil {
-		glog.Fatalf("Failed ot dial %s: %s", na.config.IstioCAAddress, err)
+		glog.Fatalf("Failed ot dial %s: %s", *na.config.IstioCAAddress, err)
 	}
 
-	defer conn.Close()
+	defer func() {
+		if closeErr := conn.Close(); closeErr != nil {
+			glog.Fatalf("Failed ot close connection")
+		}
+	}()
+
 	client := pb.NewIstioCAServiceClient(conn)
 	privKey, req := na.getCertificateSignRequest()
 	resp, err := client.Sign(context.Background(), req)

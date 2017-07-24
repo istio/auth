@@ -51,7 +51,7 @@ func main() {
 	case "gcp":
 		glog.Fatalf("Not Implemented")
 	default:
-		glog.Fatalf("Unknown Environment %s", env)
+		glog.Fatalf("Unknown Environment %s", *env)
 	}
 	glog.Infof("Starting Node Agent")
 	nodeAgent.Start()
