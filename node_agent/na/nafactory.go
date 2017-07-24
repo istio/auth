@@ -18,17 +18,24 @@ import (
 	"github.com/golang/glog"
 )
 
+// Environment Type that is used to describe various environments that are
+// supported by the node agent.
 type Environment int
 
 const (
+	// Node Agent for On Prem enviroment.
 	ONPREM Environment = iota
+	// Node Agent for GCP.
 	GCP
 )
 
+// NodeAgent interface that should be implemented by
+// various platform specific node agents.
 type NodeAgent interface {
 	Start()
 }
 
+// NewNodeAgent is constructor for Node agent based on the provided Environment variable.
 func NewNodeAgent(env Environment, cfg *Config) NodeAgent {
 	if cfg == nil {
 		glog.Fatalf("Nil configuration passed")

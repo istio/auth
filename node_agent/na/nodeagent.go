@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-// Node agent configuration that is provided from CLI.
+// Config is Node agent configuration that is provided from CLI.
 type Config struct {
 	// Root CA cert file
 	RootCACertFile *string
