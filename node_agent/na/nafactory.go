@@ -23,9 +23,9 @@ import (
 type Environment int
 
 const (
-	// Node Agent for On Prem enviroment.
+	// ONPREM Node Agent
 	ONPREM Environment = iota
-	// Node Agent for GCP.
+	// GCP Node Agent
 	GCP
 )
 

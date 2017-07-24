@@ -23,7 +23,9 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func GetMutualTLSCredentials(certificateFile string, keyFile string,
+// GetTLSCredentials creates transport credentials that are common to
+// node agent and CA.
+func GetTLSCredentials(certificateFile string, keyFile string,
 	caCertFile string, isClient bool) credentials.TransportCredentials {
 
 	// Load the certificate from disk

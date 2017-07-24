@@ -132,8 +132,12 @@ func (na *nodeAgentInternal) invokeGrpc() (bool, []byte, *pb.CertificateSignResp
 }
 
 func (na *nodeAgentInternal) writeToFile(privKey []byte, cert []byte) {
-	ioutil.WriteFile("serviceIdentityKey.pem", privKey, 0600)
-	ioutil.WriteFile("serviceIdentityCert.pem", cert, 0644)
+	if err := ioutil.WriteFile("serviceIdentityKey.pem", privKey, 0600); err != nil {
+		glog.Fatalf("Cannot write service identity private key file")
+	}
+	if err := ioutil.WriteFile("serviceIdentityCert.pem", cert, 0644); err != nil {
+		glog.Fatalf("Cannot write service identity certificate file")
+	}
 }
 
 func (na *nodeAgentInternal) getExpTime(resp *pb.CertificateSignResponse) time.Duration {

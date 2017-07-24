@@ -24,7 +24,7 @@ type onPremPlatfromImpl struct {
 }
 
 func (na *onPremPlatfromImpl) getTransportCredentials(cfg *Config) credentials.TransportCredentials {
-	return utils.GetMutualTLSCredentials(*cfg.NodeIdentityCertFile,
+	return utils.GetTLSCredentials(*cfg.NodeIdentityCertFile,
 		*cfg.NodeIdentityPrivateKeyFile,
 		*cfg.RootCACertFile, true /* isClient */)
 }
