@@ -123,10 +123,8 @@ func TestParsePemEncodedCertificate(t *testing.T) {
 			} else if c.errMsg != err.Error() {
 				t.Errorf("%s: Unexpected error message: want %s but got %s", id, c.errMsg, err.Error())
 			}
-		} else {
-			if cert.PublicKeyAlgorithm != c.publicKeyAlgo {
-				t.Errorf("%s: Unexpected public key algorithm: want %d but got %d", id, c.publicKeyAlgo, cert.PublicKeyAlgorithm)
-			}
+		} else if cert.PublicKeyAlgorithm != c.publicKeyAlgo {
+			t.Errorf("%s: Unexpected public key algorithm: want %d but got %d", id, c.publicKeyAlgo, cert.PublicKeyAlgorithm)
 		}
 	}
 }
@@ -177,10 +175,8 @@ func TestParsePemEncodedKey(t *testing.T) {
 			} else if c.errMsg != err.Error() {
 				t.Errorf(`%s: Unexpected error message: want "%s" but got "%s"`, id, c.errMsg, err.Error())
 			}
-		} else {
-			if keyType := reflect.TypeOf(key); keyType != c.keyType {
-				t.Errorf("%s: Unmatched key type: expected %v but got %v", id, c.keyType, keyType)
-			}
+		} else if keyType := reflect.TypeOf(key); keyType != c.keyType {
+			t.Errorf("%s: Unmatched key type: expected %v but got %v", id, c.keyType, keyType)
 		}
 	}
 }
