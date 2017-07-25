@@ -52,11 +52,13 @@ def presubmit(gitUtils, bazel, utils) {
   goBuildNode(gitUtils, 'istio.io/auth') {
     bazel.updateBazelRc()
     utils.initTestingCluster()
+    stage('Install required executables') {
+      sh('bin/install-prereqs.sh')
+    }
     stage('Check BUILD files') {
       sh('bin/check_build_files.sh')
     }
     stage('Bazel Build') {
-      sh('bin/install-prereqs.sh')
       bazel.fetch('-k //...')
       bazel.build('//...')
     }
