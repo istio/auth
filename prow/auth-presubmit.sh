@@ -64,4 +64,4 @@ else
 fi
 
 echo "=== Running e2e Tests ==="
-./bin/e2e.sh -tag $GIT_SHA -hub "gcr.io/istio-testing"
+./bin/e2e.sh --tag ${GIT_SHA} --hub 'gcr.io/istio-testing'
