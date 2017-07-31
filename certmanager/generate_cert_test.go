@@ -353,7 +353,8 @@ func verifyCert(privPem []byte, certPem []byte, rootCertPem []byte,
 		org:         cert.Issuer.Organization[0],
 	}
 	if !reflect.DeepEqual(expectedFields, certFields) {
-		return fmt.Errorf("{notBefore, notAfter, extKeyUsage, isCA, org}:\nexpected: %+v\nactual: %+v", expectedFields, certFields)
+		return fmt.Errorf("{notBefore, notAfter, extKeyUsage, isCA, org}:\nexpected: %+v\nactual: %+v",
+			expectedFields, certFields)
 	}
 
 	if strings.HasPrefix(host, uriScheme) {
