@@ -18,6 +18,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -108,21 +109,24 @@ func TestGenCert(t *testing.T) {
 	}
 
 	caCertPem, caPrivPem := GenCert(caCertOptions)
-	verifyCert(t, caPrivPem, caCertPem, nil, caCertOptions.Host, VerifyFields{
+	fields := VerifyFields{
 		notBefore:   caCertNotBefore,
 		notAfter:    caCertNotAfter,
 		extKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		keyUsage:    x509.KeyUsageCertSign,
 		isCA:        true,
 		org:         "MyOrg",
-	})
+	}
+	if err := verifyCert(caPrivPem, caCertPem, nil, caCertOptions.Host, fields); err != nil {
+		t.Error(err)
+	}
 
 	caCert, err := pki.ParsePemEncodedCertificate(caCertPem)
 	if err != nil {
 		t.Error(err)
 	}
 
-	caPriv, err := pki.ParsePemEncodedKey(caCert.PublicKeyAlgorithm, caPrivPem)
+	caPriv, err := pki.ParsePemEncodedKey(caPrivPem)
 	if err != nil {
 		t.Error(err)
 	}
@@ -281,13 +285,14 @@ func TestGenCert(t *testing.T) {
 	for _, c := range cases {
 		certOptions := c.certOptions
 		certPem, privPem := GenCert(certOptions)
-		verifyCert(t, privPem, certPem, caCertPem, certOptions.Host, c.verifyFields)
+		if err := verifyCert(privPem, certPem, caCertPem, certOptions.Host, c.verifyFields); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
-func verifyCert(
-	t *testing.T, privPem []byte, certPem []byte, rootCertPem []byte,
-	host string, expectedFields VerifyFields) {
+func verifyCert(privPem []byte, certPem []byte, rootCertPem []byte,
+	host string, expectedFields VerifyFields) error {
 
 	roots := x509.NewCertPool()
 	var ok bool
@@ -298,16 +303,12 @@ func verifyCert(
 	}
 
 	if !ok {
-		t.Errorf("failed to parse root certificate")
+		return fmt.Errorf("failed to parse root certificate")
 	}
 
-	block, _ := pem.Decode(certPem)
-	if block == nil {
-		t.Errorf("failed to parse certificate PEM")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
+	cert, err := pki.ParsePemEncodedCertificate(certPem)
 	if err != nil {
-		t.Errorf("failed to parse certificate: " + err.Error())
+		return err
 	}
 
 	san := host
@@ -324,19 +325,16 @@ func verifyCert(
 	opts.KeyUsages = append(opts.KeyUsages, x509.ExtKeyUsageAny)
 
 	if _, err = cert.Verify(opts); err != nil {
-		t.Errorf("failed to verify certificate: " + err.Error())
+		return fmt.Errorf("failed to verify certificate: " + err.Error())
 	}
 
-	block, _ = pem.Decode(privPem)
-	if block == nil || block.Type != "RSA PRIVATE KEY" {
-		t.Errorf("failed to decode PEM block containing private key")
-	}
-	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	priv, err := pki.ParsePemEncodedKey(privPem)
 	if err != nil {
-		t.Errorf("failed to parse private key: " + err.Error())
+		return err
 	}
-	if !reflect.DeepEqual(priv.PublicKey, *cert.PublicKey.(*rsa.PublicKey)) {
-		t.Errorf("the generated private key and cert doesn't match.")
+
+	if !reflect.DeepEqual(priv.(*rsa.PrivateKey).PublicKey, *cert.PublicKey.(*rsa.PublicKey)) {
+		return fmt.Errorf("the generated private key and cert doesn't match")
 	}
 
 	certFields := VerifyFields{
@@ -348,9 +346,8 @@ func verifyCert(
 		org:         cert.Issuer.Organization[0],
 	}
 	if !reflect.DeepEqual(expectedFields, certFields) {
-		t.Errorf("{notBefore, notAfter, extKeyUsage, isCA, org}:")
-		t.Errorf("expected: %+v", expectedFields)
-		t.Errorf("actual: %+v", certFields)
+		return fmt.Errorf("{notBefore, notAfter, extKeyUsage, isCA, org}:\nexpected: %+v\nactual: %+v",
+			expectedFields, certFields)
 	}
 
 	if strings.HasPrefix(host, uriScheme) {
@@ -362,7 +359,9 @@ func verifyCert(
 			}
 		}
 		if !matchHost {
-			t.Errorf("the certificate doesn't have the expected SAN for: %s", host)
+			return fmt.Errorf("the certificate doesn't have the expected SAN for: %s", host)
 		}
 	}
+
+	return nil
 }
