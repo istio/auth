@@ -121,7 +121,7 @@ func TestGenCert(t *testing.T) {
 
 	cases := []struct {
 		certOptions  CertOptions
-		verifyFields tu.VerifyFields
+		verifyFields *tu.VerifyFields
 	}{
 		// These certs are signed by the CA cert
 		{
@@ -139,7 +139,7 @@ func TestGenCert(t *testing.T) {
 				IsServer:     true,
 				RSAKeySize:   512,
 			},
-			verifyFields: tu.VerifyFields{
+			verifyFields: &tu.VerifyFields{
 				ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 				IsCA:        false,
 				KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
@@ -163,7 +163,7 @@ func TestGenCert(t *testing.T) {
 				IsServer:     true,
 				RSAKeySize:   512,
 			},
-			verifyFields: tu.VerifyFields{
+			verifyFields: &tu.VerifyFields{
 				ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 				IsCA:        false,
 				KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
@@ -187,7 +187,7 @@ func TestGenCert(t *testing.T) {
 				IsServer:     true,
 				RSAKeySize:   512,
 			},
-			verifyFields: tu.VerifyFields{
+			verifyFields: &tu.VerifyFields{
 				ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 				IsCA:        false,
 				KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
@@ -211,7 +211,7 @@ func TestGenCert(t *testing.T) {
 				IsServer:     true,
 				RSAKeySize:   512,
 			},
-			verifyFields: tu.VerifyFields{
+			verifyFields: &tu.VerifyFields{
 				ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 				IsCA:        false,
 				KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
@@ -235,7 +235,7 @@ func TestGenCert(t *testing.T) {
 				IsServer:     true,
 				RSAKeySize:   512,
 			},
-			verifyFields: tu.VerifyFields{
+			verifyFields: &tu.VerifyFields{
 				ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 				IsCA:        false,
 				KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
@@ -259,7 +259,7 @@ func TestGenCert(t *testing.T) {
 				IsServer:     false,
 				RSAKeySize:   512,
 			},
-			verifyFields: tu.VerifyFields{
+			verifyFields: &tu.VerifyFields{
 				ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 				IsCA:        false,
 				KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
@@ -273,7 +273,7 @@ func TestGenCert(t *testing.T) {
 	for _, c := range cases {
 		certOptions := c.certOptions
 		certPem, privPem := GenCert(certOptions)
-		if e := tu.VerifyCertificate(privPem, certPem, caCertPem, certOptions.Host, &c.verifyFields); e != nil {
+		if e := tu.VerifyCertificate(privPem, certPem, caCertPem, certOptions.Host, c.verifyFields); e != nil {
 			t.Error(e)
 		}
 	}

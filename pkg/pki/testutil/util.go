@@ -85,7 +85,7 @@ func VerifyCertificate(privPem []byte, certPem []byte, rootCertPem []byte,
 	}
 
 	if expectedFields != nil {
-		certFields := VerifyFields{
+		certFields := &VerifyFields{
 			NotBefore:   cert.NotBefore,
 			NotAfter:    cert.NotAfter,
 			ExtKeyUsage: cert.ExtKeyUsage,
