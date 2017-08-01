@@ -90,7 +90,8 @@ func runTests(cmd *cobra.Command, args []string) {
 	} else {
 		glog.Infof(`Secret "istio.default" is correctly created`)
 
-		examineSecret(s, "spiffe://cluster.local/ns/default/sa/default")
+		expectedID := fmt.Sprintf("spiffe://cluster.local/ns/%s/sa/default", s.GetNamespace())
+		examineSecret(s, expectedID)
 	}
 }
 
