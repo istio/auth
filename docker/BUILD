@@ -13,6 +13,7 @@ pkg_tar(
 )
 
 docker_build(
+    base = "@ubuntu_xenial//image",
     entrypoint = [
         "/usr/local/bin/istio_ca",
         "--self-signed-ca",

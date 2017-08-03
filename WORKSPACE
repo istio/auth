@@ -10,8 +10,15 @@ git_repository(
     tag = "v0.1.0",
 )
 
-load("@io_bazel_rules_docker//docker:docker.bzl", "docker_repositories")
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_repositories", "docker_pull")
 docker_repositories()
+
+docker_pull(
+    name = "ubuntu_xenial",
+    registry = "index.docker.io",
+    repository = "library/ubuntu",
+    tag = "xenial",
+)
 
 load("@io_bazel_rules_go//go:def.bzl", "go_repositories", "go_repository")
 go_repositories()
