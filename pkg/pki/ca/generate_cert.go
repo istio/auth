@@ -203,11 +203,11 @@ func genCertTemplate(options CertOptions) x509.Certificate {
 	}
 
 	extKeyUsages := []x509.ExtKeyUsage{}
-	if options.IsServer {
-		extKeyUsages = append(extKeyUsages, x509.ExtKeyUsageServerAuth)
-	}
 	if options.IsClient {
 		extKeyUsages = append(extKeyUsages, x509.ExtKeyUsageClientAuth)
+	}
+	if options.IsServer {
+		extKeyUsages = append(extKeyUsages, x509.ExtKeyUsageServerAuth)
 	}
 
 	template := x509.Certificate{
