@@ -29,7 +29,7 @@ type server struct {
 }
 
 func (s *server) Sign(ctx context.Context, request *pb.Request) (*pb.Response, error) {
-	// TODO: handle authenticate here
+	// TODO: handle authentication here
 
 	csr, err := pki.ParsePemEncodedCSR(request.CsrPem)
 	if err != nil {
