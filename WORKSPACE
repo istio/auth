@@ -4,8 +4,23 @@ git_repository(
     tag = "0.5.2",
 )
 
-load("@io_bazel_rules_go//go:def.bzl", "go_repositories", "go_repository")
+git_repository(
+    name = "io_bazel_rules_docker",
+    remote = "https://github.com/bazelbuild/rules_docker.git",
+    tag = "v0.1.0",
+)
 
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_repositories", "docker_pull")
+docker_repositories()
+
+docker_pull(
+    name = "ubuntu_xenial",
+    registry = "index.docker.io",
+    repository = "library/ubuntu",
+    tag = "xenial",
+)
+
+load("@io_bazel_rules_go//go:def.bzl", "go_repositories", "go_repository")
 go_repositories()
 
 git_repository(
@@ -257,16 +272,6 @@ go_repository(
     commit = "411e09b969b1170a9f0c467558eb4c4c110d9c77",
     importpath = "google.golang.org/genproto",
 )
-
-new_http_archive(
-    name = "docker_ubuntu",
-    build_file = "BUILD.ubuntu",
-    sha256 = "2c63dd81d714b825acd1cb3629c57d6ee733645479d0fcdf645203c2c35924c5",
-    type = "zip",
-    url = "https://codeload.github.com/tianon/docker-brew-ubuntu-core/zip/b6f1fe19228e5b6b7aed98dcba02f18088282f90",
-)
-
-
 
 GOOGLEAPIS_BUILD_FILE = """
 package(default_visibility = ["//visibility:public"])
