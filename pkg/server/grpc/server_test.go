@@ -84,7 +84,7 @@ func TestSign(t *testing.T) {
 		server := New(c.ca)
 		request := &pb.Request{CsrPem: []byte(c.csr)}
 
-		response, err := server.Sign(nil, request)
+		response, err := server.HandleCSR(nil, request)
 		if c.errMsg != "" && c.errMsg != err.Error() {
 			t.Errorf("Case %s: expecting error message (%s) but got (%s)", id, c.errMsg, err.Error())
 		} else if c.errMsg == "" && !bytes.Equal(response.SignedCertChain, []byte(c.cert)) {
