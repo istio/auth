@@ -74,14 +74,14 @@ func (s *Server) Run() error {
 	grpcServer := grpc.NewServer()
 	pb.RegisterIstioCAServiceServer(grpcServer, s)
 
-	// grpcServer.Server() is a blocking call, so run it in a goroutine.
+	// grpcServer.Serve() is a blocking call, so run it in a goroutine.
 	go func() {
 		glog.Infof("Starting GRPC server on port %d", s.port)
 
 		err := grpcServer.Serve(listener)
 
 		// grpcServer.Serve() always returns a non-nil error.
-		glog.Warningf("GRCP server returns an error: %v", err)
+		glog.Warningf("GRPC server returns an error: %v", err)
 	}()
 
 	return nil
