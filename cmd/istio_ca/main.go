@@ -126,7 +126,7 @@ func runCA() {
 	if opts.grpcPort > 0 {
 		grpcServer := grpc.New(ca, opts.grpcPort)
 		if err := grpcServer.Run(); err != nil {
-			glog.Warningf("GRPC server returns an error: %v", err)
+			glog.Warningf("Failed to start GRPC server with error: %v", err)
 		}
 	}
 

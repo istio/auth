@@ -39,7 +39,7 @@ type Server struct {
 // HandleCSR handles an incoming certificate signing request (CSR). It does
 // proper validation (e.g. authentication) and upon validated, signs the CSR
 // and returns the resulting certificate. If not approved, reason for refusal
-// to sign is returnes as part of the response object.
+// to sign is returned as part of the response object.
 func (s *Server) HandleCSR(ctx context.Context, request *pb.Request) (*pb.Response, error) {
 	// TODO: handle authentication here
 
