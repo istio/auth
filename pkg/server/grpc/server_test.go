@@ -91,58 +91,40 @@ func TestSign(t *testing.T) {
 	}
 }
 
-func TestIsValid(t *testing.T) {
+func TestShouldRefresh(t *testing.T) {
 	now := time.Now()
 	testCases := map[string]struct {
-		cert     *tls.Certificate
-		expected bool
+		cert          *tls.Certificate
+		shouldRefresh bool
 	}{
 		"No leaf cert": {
-			cert:     &tls.Certificate{},
-			expected: false,
-		},
-		"Cert is not valid yet": {
-			cert: &tls.Certificate{
-				Leaf: &x509.Certificate{
-					NotAfter:  now.Add(5 * time.Minute),
-					NotBefore: now.Add(time.Minute),
-				},
-			},
-			expected: false,
+			cert:          &tls.Certificate{},
+			shouldRefresh: true,
 		},
 		"Cert is expired": {
 			cert: &tls.Certificate{
-				Leaf: &x509.Certificate{
-					NotAfter:  now.Add(-time.Minute),
-					NotBefore: now.Add(-5 * time.Minute),
-				},
+				Leaf: &x509.Certificate{NotAfter: now},
 			},
-			expected: false,
+			shouldRefresh: true,
 		},
-		"Cert is invalid when it is about to expire": {
+		"Cert is about to expire": {
 			cert: &tls.Certificate{
-				Leaf: &x509.Certificate{
-					NotAfter:  now.Add(5 * time.Second),
-					NotBefore: now.Add(-time.Minute),
-				},
+				Leaf: &x509.Certificate{NotAfter: now.Add(5 * time.Second)},
 			},
-			expected: false,
+			shouldRefresh: true,
 		},
 		"Cert is valid": {
 			cert: &tls.Certificate{
-				Leaf: &x509.Certificate{
-					NotAfter:  now.Add(5 * time.Minute),
-					NotBefore: now.Add(-5 * time.Minute),
-				},
+				Leaf: &x509.Certificate{NotAfter: now.Add(5 * time.Minute)},
 			},
-			expected: true,
+			shouldRefresh: false,
 		},
 	}
 
 	for id, tc := range testCases {
-		result := isValid(tc.cert)
-		if tc.expected != result {
-			t.Errorf("%s: expected result is %t but got %t", id, tc.expected, result)
+		result := shouldRefresh(tc.cert)
+		if tc.shouldRefresh != result {
+			t.Errorf("%s: expected result is %t but got %t", id, tc.shouldRefresh, result)
 		}
 	}
 }

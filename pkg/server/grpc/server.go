@@ -31,7 +31,7 @@ import (
 	pb "istio.io/auth/proto"
 )
 
-const certValidationBuffer = time.Minute
+const certExpirationBuffer = time.Minute
 
 // Server implements pb.IstioCAService and provides the service on the
 // specified port.
@@ -101,7 +101,7 @@ func New(ca ca.CertificateAuthority, hostname string, port int) *Server {
 func (s *Server) createTLSServerOption() grpc.ServerOption {
 	config := &tls.Config{
 		GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
-			if s.certificate == nil || !isValid(s.certificate) {
+			if s.certificate == nil || shouldRefresh(s.certificate) {
 				// Apply new certificate if there isn't one yet, or the one has become invalid.
 				newCert, err := s.applyServerCertificate()
 				if err != nil {
@@ -138,12 +138,14 @@ func (s *Server) applyServerCertificate() (*tls.Certificate, error) {
 	return &cert, nil
 }
 
-func isValid(cert *tls.Certificate) bool {
+// shouldRefresh indicates whether the given certificate should be refreshed.
+func shouldRefresh(cert *tls.Certificate) bool {
+	// Check whether there is a valid leaf certificate.
 	leaf := cert.Leaf
 	if leaf == nil {
-		return false
+		return true
 	}
-	now := time.Now()
-	return leaf.NotBefore.Add(certValidationBuffer).Before(now) &&
-		leaf.NotAfter.Add(-certValidationBuffer).After(now)
+
+	// Check whether the leaf certificate is about to expire.
+	return leaf.NotAfter.Add(-certExpirationBuffer).Before(time.Now())
 }
