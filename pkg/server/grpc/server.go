@@ -31,6 +31,8 @@ import (
 	pb "istio.io/auth/proto"
 )
 
+const certValidationBuffer = time.Minute
+
 // Server implements pb.IstioCAService and provides the service on the
 // specified port.
 type Server struct {
@@ -100,7 +102,7 @@ func (s *Server) createTLSServerOption() grpc.ServerOption {
 	config := &tls.Config{
 		GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
 			if s.certificate == nil || !isValid(s.certificate) {
-				// apply new certificate if there isn't one yet, or the one has become invalid
+				// Apply new certificate if there isn't one yet, or the one has become invalid.
 				newCert, err := s.applyServerCertificate()
 				if err != nil {
 					return nil, err
@@ -116,7 +118,7 @@ func (s *Server) createTLSServerOption() grpc.ServerOption {
 func (s *Server) applyServerCertificate() (*tls.Certificate, error) {
 	opts := ca.CertOptions{
 		Host:       s.hostname,
-		RSAKeySize: 1024,
+		RSAKeySize: 2048,
 	}
 
 	csrPEM, privPEM, err := ca.GenCSR(opts)
@@ -142,5 +144,6 @@ func isValid(cert *tls.Certificate) bool {
 		return false
 	}
 	now := time.Now()
-	return leaf.NotBefore.Before(now) && leaf.NotAfter.After(now)
+	return leaf.NotBefore.Add(certValidationBuffer).Before(now) &&
+		leaf.NotAfter.Add(-certValidationBuffer).After(now)
 }

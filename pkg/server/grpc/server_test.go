@@ -119,11 +119,20 @@ func TestIsValid(t *testing.T) {
 			},
 			expected: false,
 		},
+		"Cert is invalid when it is about to expire": {
+			cert: &tls.Certificate{
+				Leaf: &x509.Certificate{
+					NotAfter:  now.Add(5 * time.Second),
+					NotBefore: now.Add(-time.Minute),
+				},
+			},
+			expected: false,
+		},
 		"Cert is valid": {
 			cert: &tls.Certificate{
 				Leaf: &x509.Certificate{
-					NotAfter:  now.Add(time.Minute),
-					NotBefore: now.Add(-time.Minute),
+					NotAfter:  now.Add(5 * time.Minute),
+					NotBefore: now.Add(-5 * time.Minute),
 				},
 			},
 			expected: true,
