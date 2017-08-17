@@ -21,6 +21,7 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"istio.io/auth/pkg/pki"
 	"istio.io/auth/pkg/pki/ca"
 	pb "istio.io/auth/proto"
 )
@@ -30,6 +31,13 @@ const (
 	ONPREM int = iota // 0
 	// GCP Node Agent
 	GCP // 1
+	// CertRequestRetrialInterval is the retrial interval for certificate requests.
+	CertRequestRetrialInterval = time.Second
+	// CertRequestMaxRetries is the number of retries for certificate requests.
+	CertRequestMaxRetries = 5
+	// CertRenewalGracePeriodMaxRatio indicates the max length of the grace period in the percentage
+	// of the entire certificate TTL.
+	CertRenewalGracePeriodMaxPercentage = 50
 )
 
 // Config is Node agent configuration that is provided from CLI.
@@ -55,8 +63,9 @@ type Config struct {
 
 	RSAKeySize *int
 
-	// cert renewal cutoff
-	PercentageExpirationTime *int
+	// Indicates the length of the grace period for certificate renewal in the
+	// percentage of certificate TTL.
+	CertRenewalGracePeriodPercentage *int
 
 	// Istio CA grpc server
 	IstioCAAddress *string
@@ -92,14 +101,37 @@ func (na *nodeAgentInternal) Start() {
 		glog.Fatalf("Node Agent is not running on the right platform")
 	}
 
-	for {
+	gracePeriodPercentage := *na.config.CertRenewalGracePeriodPercentage
+	if gracePeriodPercentage >= 100 || gracePeriodPercentage < 0 {
+		glog.Errorf("Certificate grace period config %d exceeds limit [0, 99]. Set to default: %d",
+			CertRenewalGracePeriodMaxPercentage, gracePeriodPercentage, CertRenewalGracePeriodMaxPercentage)
+		gracePeriodPercentage = CertRenewalGracePeriodMaxPercentage
+	}
+
+	retries := 0
+	interval := CertRequestRetrialInterval
+	for retries < CertRequestMaxRetries {
 		privKey, resp, err := na.sendCSR()
 		if err != nil {
 			glog.Errorf("CSR signing failed: %s", err)
-		} else if resp != nil && resp.IsApproved {
-			timer := time.NewTimer(na.getExpTime(resp))
-			na.writeToFile(privKey, resp.SignedCertChain)
+			retries++
+			timer := time.NewTimer(interval)
+			// Expernentially increase the backoff time.
+			interval = interval * 2
 			<-timer.C
+		}
+		if resp != nil && resp.IsApproved {
+			ttl, err := pki.GetPemEncodedCertificateTTL(resp.SignedCertChain)
+			if err != nil {
+				glog.Fatalf("Error getting TTL from approved cert: %s", err)
+				return
+			} else {
+				retries = 0
+				interval = CertRequestRetrialInterval
+				timer := time.NewTimer(time.Duration((100-gracePeriodPercentage)/100) * ttl)
+				na.writeToFile(privKey, resp.SignedCertChain)
+				<-timer.C
+			}
 		}
 	}
 }
@@ -155,9 +187,4 @@ func (na *nodeAgentInternal) writeToFile(privKey []byte, cert []byte) {
 	if err := ioutil.WriteFile("serviceIdentityCert.pem", cert, 0644); err != nil {
 		glog.Fatalf("Cannot write service identity certificate file")
 	}
-}
-
-func (na *nodeAgentInternal) getExpTime(resp *pb.Response) time.Duration {
-	// TODO: extract expiration time from certificate contained in the response object.
-	return 0
 }
