@@ -35,8 +35,8 @@ const (
 	CertRequestRetrialInterval = time.Second
 	// CertRequestMaxRetries is the number of retries for certificate requests.
 	CertRequestMaxRetries = 5
-	// CertRenewalGracePeriodMaxRatio indicates the max length of the grace period in the percentage
-	// of the entire certificate TTL.
+	// CertRenewalGracePeriodMaxPercentage indicates the max length of the grace period in the
+	// percentage of the entire certificate TTL.
 	CertRenewalGracePeriodMaxPercentage = 50
 )
 
@@ -104,7 +104,7 @@ func (na *nodeAgentInternal) Start() {
 	gracePeriodPercentage := *na.config.CertRenewalGracePeriodPercentage
 	if gracePeriodPercentage >= 100 || gracePeriodPercentage < 0 {
 		glog.Errorf("Certificate grace period config %d exceeds limit [0, 99]. Set to default: %d",
-			CertRenewalGracePeriodMaxPercentage, gracePeriodPercentage, CertRenewalGracePeriodMaxPercentage)
+			gracePeriodPercentage, CertRenewalGracePeriodMaxPercentage)
 		gracePeriodPercentage = CertRenewalGracePeriodMaxPercentage
 	}
 
@@ -125,13 +125,12 @@ func (na *nodeAgentInternal) Start() {
 			if err != nil {
 				glog.Fatalf("Error getting TTL from approved cert: %s", err)
 				return
-			} else {
-				retries = 0
-				interval = CertRequestRetrialInterval
-				timer := time.NewTimer(time.Duration((100-gracePeriodPercentage)/100) * ttl)
-				na.writeToFile(privKey, resp.SignedCertChain)
-				<-timer.C
 			}
+			retries = 0
+			interval = CertRequestRetrialInterval
+			timer := time.NewTimer(time.Duration((100-gracePeriodPercentage)/100) * ttl)
+			na.writeToFile(privKey, resp.SignedCertChain)
+			<-timer.C
 		}
 	}
 }
