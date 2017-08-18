@@ -101,35 +101,48 @@ func (na *nodeAgentInternal) Start() {
 		glog.Fatalf("Node Agent is not running on the right platform")
 	}
 
+	// If gracePeriodPercentage is not within [1, 99], we should apply the default (50).
 	gracePeriodPercentage := *na.config.CertRenewalGracePeriodPercentage
-	if gracePeriodPercentage >= 100 || gracePeriodPercentage < 0 {
-		glog.Errorf("Certificate grace period config %d exceeds limit [0, 99]. Set to default: %d",
+	if gracePeriodPercentage >= 100 || gracePeriodPercentage <= 0 {
+		glog.Errorf("Certificate grace period config %d exceeds limit [1, 99]. Set to default: %d",
 			gracePeriodPercentage, CertRenewalGracePeriodMaxPercentage)
 		gracePeriodPercentage = CertRenewalGracePeriodMaxPercentage
 	}
 
 	retries := 0
-	interval := CertRequestRetrialInterval
-	for retries < CertRequestMaxRetries {
+	retrialInterval := CertRequestRetrialInterval
+	for {
+		glog.Info("Sending CSR (retrial #%d) ...", retries)
 		privKey, resp, err := na.sendCSR()
-		if err != nil {
-			glog.Errorf("CSR signing failed: %s", err)
-			retries++
-			timer := time.NewTimer(interval)
-			// Expernentially increase the backoff time.
-			interval = interval * 2
-			<-timer.C
-		}
-		if resp != nil && resp.IsApproved {
-			ttl, err := pki.GetPemEncodedCertificateTTL(resp.SignedCertChain)
-			if err != nil {
-				glog.Fatalf("Error getting TTL from approved cert: %s", err)
-				return
+		if err == nil && resp != nil && resp.IsApproved {
+			cert, certErr := pki.ParsePemEncodedCertificate(resp.SignedCertChain)
+			if certErr != nil {
+				glog.Fatalf("Error getting TTL from approved cert: %s", certErr)
 			}
-			retries = 0
-			interval = CertRequestRetrialInterval
-			timer := time.NewTimer(time.Duration((100-gracePeriodPercentage)/100) * ttl)
+			certTTL := cert.NotAfter.Sub(cert.NotBefore)
+			// Wait until the grace period starts.
+			waittime := certTTL - time.Duration(gracePeriodPercentage/100)*certTTL
+			timer := time.NewTimer(waittime)
 			na.writeToFile(privKey, resp.SignedCertChain)
+			glog.Info("Obtained new cert. Will renew in %s", waittime.String())
+			retries = 0
+			retrialInterval = CertRequestRetrialInterval
+			<-timer.C
+		} else {
+			if retries >= CertRequestMaxRetries {
+				glog.Fatalf("Max number of retrials has been reached: %d. Abort.", CertRequestMaxRetries)
+			}
+			if err != nil {
+				glog.Errorf("CSR signing failed: %s. Will retry in %s", err, retrialInterval.String())
+			} else if resp == nil {
+				glog.Errorf("CSR signing failed: response empty. Will retry in %s", retrialInterval.String())
+			} else {
+				glog.Errorf("CSR signing failed: request not approved. Will retry in %s", retrialInterval.String())
+			}
+			timer := time.NewTimer(retrialInterval)
+			retries++
+			// Expernentially increase the backoff time.
+			retrialInterval = retrialInterval * 2
 			<-timer.C
 		}
 	}

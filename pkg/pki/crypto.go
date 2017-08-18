@@ -19,7 +19,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"time"
 )
 
 const (
@@ -80,13 +79,4 @@ func ParsePemEncodedKey(keyBytes []byte) (crypto.PrivateKey, error) {
 	default:
 		return nil, fmt.Errorf("Unsupported PEM block type for a private key: %s", kb.Type)
 	}
-}
-
-// GetPemEncodedCertificateTTL returns the TTL of a given a PEM-encoded certificate.
-func GetPemEncodedCertificateTTL(certPem []byte) (time.Duration, error) {
-	cert, err := ParsePemEncodedCertificate(certPem)
-	if err != nil {
-		return time.Duration(0), fmt.Errorf("Cannot get TTL from cert pem: %s", err)
-	}
-	return cert.NotAfter.Sub(cert.NotBefore), nil
 }
