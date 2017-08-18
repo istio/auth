@@ -123,7 +123,7 @@ func (na *nodeAgentInternal) createRequest() ([]byte, *pb.Request) {
 }
 
 func (na *nodeAgentInternal) sendCSR() ([]byte, *pb.Response, error) {
-        glog.Info("Sending out CSR to CA...")
+	glog.Info("Sending out CSR to CA...")
 	dialOptions, err := na.pr.GetDialOptions(na.config)
 	if err != nil {
 		glog.Errorf("Cannot construct the dial options with error %s", err)
