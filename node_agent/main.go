@@ -35,10 +35,6 @@ func init() {
 		"Node identity private key file")
 	naConfig.IstioCAAddress = flag.String("ca-address", "127.0.0.1",
 		"Istio CA address")
-	naConfig.CertRenewalGracePeriodPercentage = flag.Int("renew-grace-period-percent",
-		na.CertRenewalGracePeriodMaxPercentage,
-		"Integer in [1, 99], grace period length in the percentage of cert TTL. For example, "+
-			"30 means renewing when the 70% of the cert's TTL has passed. Default value is 50.")
 	naConfig.ServiceIdentityDir = flag.String("cert-dir", "./", "Certificate directory")
 	naConfig.RootCACertFile = flag.String("root-cert", "", "Root Certi file")
 	naConfig.Env = flag.Int("env", na.ONPREM, "Node Environment : onprem | gcp")

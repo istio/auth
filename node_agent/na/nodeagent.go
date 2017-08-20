@@ -35,9 +35,9 @@ const (
 	CertRequestRetrialInterval = time.Second
 	// CertRequestMaxRetries is the number of retries for certificate requests.
 	CertRequestMaxRetries = 5
-	// CertRenewalGracePeriodMaxPercentage indicates the max length of the grace period in the
+	// CertRenewalGracePeriodPercentage indicates the length of the grace period in the
 	// percentage of the entire certificate TTL.
-	CertRenewalGracePeriodMaxPercentage = 50
+	CertRenewalGracePeriodPercentage = 50
 )
 
 // Config is Node agent configuration that is provided from CLI.
@@ -62,10 +62,6 @@ type Config struct {
 	ServiceIdentityDir *string
 
 	RSAKeySize *int
-
-	// Indicates the length of the grace period for certificate renewal in the
-	// percentage of certificate TTL.
-	CertRenewalGracePeriodPercentage *int
 
 	// Istio CA grpc server
 	IstioCAAddress *string
@@ -101,18 +97,10 @@ func (na *nodeAgentInternal) Start() {
 		glog.Fatalf("Node Agent is not running on the right platform")
 	}
 
-	// If gracePeriodPercentage is not within [1, 99], we should apply the default (50).
-	gracePeriodPercentage := *na.config.CertRenewalGracePeriodPercentage
-	if gracePeriodPercentage >= 100 || gracePeriodPercentage <= 0 {
-		glog.Errorf("Certificate grace period config %d exceeds limit [1, 99]. Set to default: %d",
-			gracePeriodPercentage, CertRenewalGracePeriodMaxPercentage)
-		gracePeriodPercentage = CertRenewalGracePeriodMaxPercentage
-	}
-
 	retries := 0
 	retrialInterval := CertRequestRetrialInterval
 	for {
-		glog.Info("Sending CSR (retrial #%d) ...", retries)
+		glog.Infof("Sending CSR (retrial #%d) ...", retries)
 		privKey, resp, err := na.sendCSR()
 		if err == nil && resp != nil && resp.IsApproved {
 			cert, certErr := pki.ParsePemEncodedCertificate(resp.SignedCertChain)
@@ -121,16 +109,17 @@ func (na *nodeAgentInternal) Start() {
 			}
 			certTTL := cert.NotAfter.Sub(cert.NotBefore)
 			// Wait until the grace period starts.
-			waittime := certTTL - time.Duration(gracePeriodPercentage/100)*certTTL
+			waittime := certTTL - time.Duration(CertRenewalGracePeriodPercentage/100)*certTTL
 			timer := time.NewTimer(waittime)
 			na.writeToFile(privKey, resp.SignedCertChain)
-			glog.Info("Obtained new cert. Will renew in %s", waittime.String())
+			glog.Infof("Obtained new cert. Will renew in %s", waittime.String())
 			retries = 0
 			retrialInterval = CertRequestRetrialInterval
 			<-timer.C
 		} else {
 			if retries >= CertRequestMaxRetries {
-				glog.Fatalf("Max number of retrials has been reached: %d. Abort.", CertRequestMaxRetries)
+				glog.Fatalf("Node agent can't get the CSR approved from Istio CA after max number of retrials"+
+					"(%d), please fix the error and retry later.", CertRequestMaxRetries)
 			}
 			if err != nil {
 				glog.Errorf("CSR signing failed: %s. Will retry in %s", err, retrialInterval.String())
