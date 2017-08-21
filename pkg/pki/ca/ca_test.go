@@ -77,7 +77,7 @@ func TestSelfSignedIstioCA(t *testing.T) {
 
 	foundSAN := false
 	for _, ee := range cert.Extensions {
-		if ee.Id.Equal(oidSubjectAltName) {
+		if ee.Id.Equal(pki.OIDSubjectAltName) {
 			foundSAN = true
 			id := fmt.Sprintf("spiffe://cluster.local/ns/%s/sa/%s", namespace, name)
 			rv := asn1.RawValue{Tag: tagURI, Class: asn1.ClassContextSpecific, Bytes: []byte(id)}
@@ -219,18 +219,8 @@ func TestSignCSR(t *testing.T) {
 	}
 
 	expected := []pkix.Extension{buildSubjectAltNameExtension(host)}
-	actual := extractSANExtensions(cert.Extensions)
+	actual := pki.ExtractSANExtensions(cert.Extensions)
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Unexpected extensions: wanted %v but got %v", expected, actual)
 	}
-}
-
-func extractSANExtensions(exts []pkix.Extension) []pkix.Extension {
-	sans := []pkix.Extension{}
-	for _, ext := range exts {
-		if ext.Id.Equal(oidSubjectAltName) {
-			sans = append(sans, ext)
-		}
-	}
-	return sans
 }

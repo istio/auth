@@ -82,9 +82,6 @@ const (
 	uriScheme = "spiffe"
 )
 
-// See http://www.alvestrand.no/objectid/2.5.29.17.html.
-var oidSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
-
 // GenCSR generates a X.509 certificate sign request and private key with the given options.
 func GenCSR(options CertOptions) ([]byte, []byte, error) {
 	// Generates a CSR
@@ -260,5 +257,5 @@ func buildSubjectAltNameExtension(host string) pkix.Extension {
 		glog.Fatalf("Failed to marshal the raw values for SAN field (err: %s)", err)
 	}
 
-	return pkix.Extension{Id: oidSubjectAltName, Value: bs}
+	return pkix.Extension{Id: pki.OIDSubjectAltName, Value: bs}
 }

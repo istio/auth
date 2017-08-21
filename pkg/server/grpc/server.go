@@ -16,6 +16,7 @@ package grpc
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"time"
@@ -36,10 +37,11 @@ const certExpirationBuffer = time.Minute
 // Server implements pb.IstioCAService and provides the service on the
 // specified port.
 type Server struct {
-	ca          ca.CertificateAuthority
-	certificate *tls.Certificate
-	hostname    string
-	port        int
+	authenticators []authenticator
+	ca             ca.CertificateAuthority
+	certificate    *tls.Certificate
+	hostname       string
+	port           int
 }
 
 // HandleCSR handles an incoming certificate signing request (CSR). It does
@@ -48,6 +50,13 @@ type Server struct {
 // to sign is returned as part of the response object.
 func (s *Server) HandleCSR(ctx context.Context, request *pb.Request) (*pb.Response, error) {
 	// TODO: handle authentication here
+
+	user, ok := s.authenticate(ctx)
+	if !ok {
+		glog.Warning("failed to authenticate request")
+		return nil, fmt.Errorf("failed to authenticate request")
+	}
+	glog.Error(user.identities)
 
 	cert, err := s.ca.Sign(request.CsrPem)
 	if err != nil {
@@ -91,15 +100,22 @@ func (s *Server) Run() error {
 
 // New creates a new instance of `IstioCAServiceServer`.
 func New(ca ca.CertificateAuthority, hostname string, port int) *Server {
+	certAuthenticator := &clientCertAuthenticator{}
 	return &Server{
-		ca:       ca,
-		hostname: hostname,
-		port:     port,
+		authenticators: []authenticator{certAuthenticator},
+		ca:             ca,
+		hostname:       hostname,
+		port:           port,
 	}
 }
 
 func (s *Server) createTLSServerOption() grpc.ServerOption {
+	cp := x509.NewCertPool()
+	cp.AppendCertsFromPEM(s.ca.GetRootCertificate())
+
 	config := &tls.Config{
+		ClientCAs:  cp,
+		ClientAuth: tls.VerifyClientCertIfGiven,
 		GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
 			if s.certificate == nil || shouldRefresh(s.certificate) {
 				// Apply new certificate if there isn't one yet, or the one has become invalid.
@@ -136,6 +152,15 @@ func (s *Server) applyServerCertificate() (*tls.Certificate, error) {
 		return nil, err
 	}
 	return &cert, nil
+}
+
+func (s *Server) authenticate(ctx context.Context) (*user, bool) {
+	for _, authenticator := range s.authenticators {
+		if user, ok := authenticator.authenticate(ctx); ok {
+			return user, ok
+		}
+	}
+	return nil, false
 }
 
 // shouldRefresh indicates whether the given certificate should be refreshed.

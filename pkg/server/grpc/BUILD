@@ -2,7 +2,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["server.go"],
+    srcs = [
+        "authenticator.go",
+        "server.go",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/pki:go_default_library",
@@ -11,6 +14,7 @@ go_library(
         "@com_github_golang_glog//:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_google_grpc//credentials:go_default_library",
+        "@org_golang_google_grpc//peer:go_default_library",
         "@org_golang_x_net//context:go_default_library",
     ],
 )
