@@ -107,7 +107,7 @@ func (na *nodeAgentInternal) Start() {
 		if err == nil && resp != nil && resp.IsApproved {
 			cert, certErr := pki.ParsePemEncodedCertificate(resp.SignedCertChain)
 			if certErr != nil {
-				glog.Errorf("Error getting TTL from approved cert: %s", certErr)
+				glog.Errorf("Error getting TTL from approved cert: %v", certErr)
 				success = false
 			} else {
 				certTTL := cert.NotAfter.Sub(cert.NotBefore)
@@ -131,7 +131,7 @@ func (na *nodeAgentInternal) Start() {
 					"(%d), please fix the error and retry later.", certRequestMaxRetries)
 			}
 			if err != nil {
-				glog.Errorf("CSR signing failed: %s. Will retry in %s", err, retrialInterval.String())
+				glog.Errorf("CSR signing failed: %v. Will retry in %s", err, retrialInterval.String())
 			} else if resp == nil {
 				glog.Errorf("CSR signing failed: response empty. Will retry in %s", retrialInterval.String())
 			} else if !resp.IsApproved {
@@ -156,7 +156,7 @@ func (na *nodeAgentInternal) createRequest() ([]byte, *pb.Request) {
 	})
 
 	if err != nil {
-		glog.Fatalf("Failed to generate CSR: %s", err)
+		glog.Fatalf("Failed to generate CSR: %v", err)
 	}
 
 	return privKey, &pb.Request{
@@ -168,12 +168,12 @@ func (na *nodeAgentInternal) sendCSR() ([]byte, *pb.Response, error) {
 	glog.Infof("Sending out CSR to CA...")
 	dialOptions, err := na.pr.GetDialOptions(na.config)
 	if err != nil {
-		glog.Errorf("Cannot construct the dial options with error %s", err)
+		glog.Errorf("Cannot construct the dial options with error %v", err)
 		return nil, nil, err
 	}
 	conn, err := grpc.Dial(*na.config.IstioCAAddress, dialOptions...)
 	if err != nil {
-		glog.Fatalf("Failed ot dial %s: %s", *na.config.IstioCAAddress, err)
+		glog.Fatalf("Failed ot dial %s: %v", *na.config.IstioCAAddress, err)
 	}
 
 	defer func() {
@@ -186,7 +186,7 @@ func (na *nodeAgentInternal) sendCSR() ([]byte, *pb.Response, error) {
 	privKey, req := na.createRequest()
 	resp, err := client.HandleCSR(context.Background(), req)
 	if err != nil {
-		glog.Errorf("CSR request failed %s", err)
+		glog.Errorf("CSR request failed %v", err)
 		return nil, nil, err
 	}
 
