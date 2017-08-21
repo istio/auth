@@ -24,9 +24,9 @@ import (
 
 func TestBuildAndExtractIdentities(t *testing.T) {
 	ids := []Identity{
-		Identity{Type: TypeDNS, Value: []byte("test.domain.com")},
-		Identity{Type: TypeIP, Value: []byte("10.0.0.1")},
-		Identity{Type: TypeURI, Value: []byte("spiffe://test.domain.com/ns/default/sa/default")},
+		{Type: TypeDNS, Value: []byte("test.domain.com")},
+		{Type: TypeIP, Value: []byte("10.0.0.1")},
+		{Type: TypeURI, Value: []byte("spiffe://test.domain.com/ns/default/sa/default")},
 	}
 	san, err := BuildSANExtension(ids)
 	if err != nil {
@@ -96,15 +96,15 @@ func TestExtractSANExtension(t *testing.T) {
 		},
 		"An extensions with wrong OID": {
 			exts: []pkix.Extension{
-				pkix.Extension{Id: asn1.ObjectIdentifier{1, 2, 3}},
+				{Id: asn1.ObjectIdentifier{1, 2, 3}},
 			},
 			found: false,
 		},
 		"Correct SAN extension": {
 			exts: []pkix.Extension{
-				pkix.Extension{Id: asn1.ObjectIdentifier{1, 2, 3}},
-				pkix.Extension{Id: asn1.ObjectIdentifier{2, 5, 29, 17}},
-				pkix.Extension{Id: asn1.ObjectIdentifier{3, 2, 1}},
+				{Id: asn1.ObjectIdentifier{1, 2, 3}},
+				{Id: asn1.ObjectIdentifier{2, 5, 29, 17}},
+				{Id: asn1.ObjectIdentifier{3, 2, 1}},
 			},
 			found: true,
 		},
