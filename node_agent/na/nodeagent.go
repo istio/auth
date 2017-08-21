@@ -121,6 +121,8 @@ func (na *nodeAgentInternal) Start() {
 				<-timer.C
 				success = true
 			}
+		} else {
+			success = false
 		}
 
 		if !success {
