@@ -97,6 +97,7 @@ func (na *nodeAgentInternal) Start() {
 		glog.Fatalf("Node Agent is not running on the right platform")
 	}
 
+	glog.Infof("Node Agent starts successfully.")
 	retries := 0
 	retrialInterval := certRequestRetrialInterval
 	success := false
@@ -114,7 +115,7 @@ func (na *nodeAgentInternal) Start() {
 				waitTime := certTTL - time.Duration(certRenewalGracePeriodPercentage/100)*certTTL
 				timer := time.NewTimer(waitTime)
 				na.writeToFile(privKey, resp.SignedCertChain)
-				glog.Infof("Obtained new cert. Will renew in %s", waitTime.String())
+				glog.Infof("CSR is approved successfully. Will renew cert in %s", waitTime.String())
 				retries = 0
 				retrialInterval = certRequestRetrialInterval
 				<-timer.C
@@ -162,6 +163,7 @@ func (na *nodeAgentInternal) createRequest() ([]byte, *pb.Request) {
 }
 
 func (na *nodeAgentInternal) sendCSR() ([]byte, *pb.Response, error) {
+	glog.Infof("Sending out CSR to CA...")
 	dialOptions, err := na.pr.GetDialOptions(na.config)
 	if err != nil {
 		glog.Errorf("Cannot construct the dial options with error %s", err)
@@ -190,6 +192,7 @@ func (na *nodeAgentInternal) sendCSR() ([]byte, *pb.Response, error) {
 }
 
 func (na *nodeAgentInternal) writeToFile(privKey []byte, cert []byte) {
+	glog.Infof("Write key and cert to local file.")
 	if err := ioutil.WriteFile("serviceIdentityKey.pem", privKey, 0600); err != nil {
 		glog.Fatalf("Cannot write service identity private key file")
 	}
