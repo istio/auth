@@ -112,7 +112,7 @@ func TestExtractSANExtension(t *testing.T) {
 
 	for id, tc := range testCases {
 		cert := &x509.Certificate{Extensions: tc.exts}
-		_, found := ExtractSANExtension(cert)
+		found := ExtractSANExtension(cert) != nil
 		if found != tc.found {
 			t.Errorf("Case %q: expect `found` to be %t but got %t", id, tc.found, found)
 		}

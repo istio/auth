@@ -74,8 +74,8 @@ func TestSelfSignedIstioCA(t *testing.T) {
 		t.Error("Failed to verify generated cert")
 	}
 
-	san, found := pki.ExtractSANExtension(cert)
-	if !found {
+	san := pki.ExtractSANExtension(cert)
+	if san == nil {
 		t.Errorf("Generated certificate does not contain a SAN field")
 	}
 
@@ -213,8 +213,8 @@ func TestSignCSR(t *testing.T) {
 		t.Error(err)
 	}
 
-	san, found := pki.ExtractSANExtension(cert)
-	if !found {
+	san := pki.ExtractSANExtension(cert)
+	if san == nil {
 		t.Errorf("No SAN extension is found in the certificate")
 	}
 	expected := buildSubjectAltNameExtension(host)

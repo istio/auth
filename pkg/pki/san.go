@@ -132,16 +132,16 @@ func ExtractIDsFromSAN(sanExt *pkix.Extension) ([]Identity, error) {
 
 // ExtractSANExtension extracts the "Subject Alternative Name" externsion from
 // the given X.509 cerificate.
-func ExtractSANExtension(cert *x509.Certificate) (*pkix.Extension, bool) {
+func ExtractSANExtension(cert *x509.Certificate) *pkix.Extension {
 	for _, ext := range cert.Extensions {
 		if ext.Id.Equal(oidSubjectAlternativeName) {
 			// We don't need to examine other extensions anymore since a certificate
 			// must not include more than one instance of a particular extension. See
 			// https://tools.ietf.org/html/rfc5280#section-4.2.
-			return &ext, true
+			return &ext
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func generateReversedMap(m map[IdentityType]int) map[int]IdentityType {
