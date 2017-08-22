@@ -26,7 +26,7 @@ import (
 func TestExtractIDs(t *testing.T) {
 	id := "test.id"
 	sanExt, err := pki.BuildSANExtension([]pki.Identity{
-		pki.Identity{Type: pki.TypeURI, Value: []byte(id)},
+		{Type: pki.TypeURI, Value: []byte(id)},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -42,22 +42,22 @@ func TestExtractIDs(t *testing.T) {
 		},
 		"Extensions without SAN": {
 			exts: []pkix.Extension{
-				pkix.Extension{Id: asn1.ObjectIdentifier{1, 2, 3, 4}},
-				pkix.Extension{Id: asn1.ObjectIdentifier{3, 2, 1}},
+				{Id: asn1.ObjectIdentifier{1, 2, 3, 4}},
+				{Id: asn1.ObjectIdentifier{3, 2, 1}},
 			},
 			expectedIDs: nil,
 		},
 		"Extensions with bad SAN": {
 			exts: []pkix.Extension{
-				pkix.Extension{Id: asn1.ObjectIdentifier{2, 5, 29, 17}, Value: []byte("bad san bytes")},
+				{Id: asn1.ObjectIdentifier{2, 5, 29, 17}, Value: []byte("bad san bytes")},
 			},
 			expectedIDs: nil,
 		},
 		"Extensions with SAN": {
 			exts: []pkix.Extension{
-				pkix.Extension{Id: asn1.ObjectIdentifier{1, 2, 3, 4}},
+				{Id: asn1.ObjectIdentifier{1, 2, 3, 4}},
 				*sanExt,
-				pkix.Extension{Id: asn1.ObjectIdentifier{3, 2, 1}},
+				{Id: asn1.ObjectIdentifier{3, 2, 1}},
 			},
 			expectedIDs: []string{id},
 		},
