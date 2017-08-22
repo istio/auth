@@ -329,7 +329,7 @@ new_git_repository(
 
 git_repository(
     name = "com_github_istio_test_infra",
-    commit = "9a3ac467ba862432c75e42cecff7aa5c2980e3b8",   # Jun 18, 2017
+    commit = "b3f3a724f642e92cd2ed0bbe3f95e0ddb46d4b74",   # Aug 22, 2017
     remote = "https://github.com/istio/test-infra.git",
 )
 

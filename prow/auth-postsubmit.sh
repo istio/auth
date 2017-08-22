@@ -63,3 +63,23 @@ fi
 
 echo "=== Running e2e Tests ==="
 bin/e2e.sh --tag ${GIT_SHA} --hub 'gcr.io/istio-testing'
+RET=$?
+
+if [ "${CI:-}" == 'bootstrap' ]; then
+    if [[ $RET -eq 0 ]]; then
+        echo "=== Building githubctl ==="
+        bazel build @com_github_istio_test_infra//toolbox/githubctl:githubctl
+
+        echo "=== Fast-forwarding stable to new SHA ==="
+        bazel-bin/external/com_github_istio_test_infra/toolbox/githubctl/githubctl \
+            --op=fastForward \
+            --repo=auth \
+            --base_branch=stable \
+            --ref_sha=$GIT_SHA
+    else
+        echo "e2e tests failed, skipping stable branch promotion"
+    fi
+    
+else
+    echo "Not in bootstrap environment, skipping stable branch promotion"
+fi
