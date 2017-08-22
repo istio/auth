@@ -79,7 +79,6 @@ if [ "${CI:-}" == 'bootstrap' ]; then
     else
         echo "e2e tests failed, skipping stable branch promotion"
     fi
-    
 else
     echo "Not in bootstrap environment, skipping stable branch promotion"
 fi
