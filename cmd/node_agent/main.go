@@ -48,7 +48,7 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-    glog.Error(err)
+		glog.Error(err)
 		os.Exit(-1)
 	}
 }
