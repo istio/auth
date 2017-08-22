@@ -130,7 +130,7 @@ func ExtractIDsFromSAN(sanExt *pkix.Extension) ([]Identity, error) {
 }
 
 // ExtractSANExtension extracts the "Subject Alternative Name" externsion from
-// the given extension set.
+// the given PKIX extension set.
 func ExtractSANExtension(exts []pkix.Extension) *pkix.Extension {
 	for _, ext := range exts {
 		if ext.Id.Equal(oidSubjectAlternativeName) {

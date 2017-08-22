@@ -32,7 +32,7 @@ func (authZ *simpleAuthorizer) authorize(requester *user, requestedIDs []string)
 
 	for _, requestedID := range requestedIDs {
 		if _, exists := idMap[requestedID]; !exists {
-			glog.Infof("The requested identity (%q) does not belong to the requester", requestedID)
+			glog.Warningf("The requested identity (%q) does not match the requester", requestedID)
 
 			return false
 		}
