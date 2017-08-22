@@ -36,13 +36,13 @@ func init() {
 	flags := rootCmd.Flags()
 
 	flags.StringVar(&naConfig.ServiceIdentity, "service-identity", "", "Service Identity the node agent is managing")
-	flags.StringVar(&naConfig.ServiceIdentityOrg, "org", "Juju org", "organization for the cert")
+	flags.StringVar(&naConfig.ServiceIdentityOrg, "org", "Juju org", "Organization for the cert")
 	flags.IntVar(&naConfig.RSAKeySize, "key-size", 1024, "Size of generated private key")
 	flags.StringVar(&naConfig.NodeIdentityCertFile, "na-cert", "", "Node Agent identity cert file")
 	flags.StringVar(&naConfig.NodeIdentityPrivateKeyFile, "na-key", "", "Node identity private key file")
 	flags.StringVar(&naConfig.IstioCAAddress, "ca-address", "127.0.0.1", "Istio CA address")
 	flags.StringVar(&naConfig.ServiceIdentityDir, "cert-dir", "./", "Certificate directory")
-	flags.StringVar(&naConfig.RootCACertFile, "root-cert", "", "Root Certi file")
+	flags.StringVar(&naConfig.RootCACertFile, "root-cert", "", "Root Certificate file")
 	flags.IntVar(&naConfig.Env, "env", na.ONPREM, "Node Environment : onprem | gcp")
 }
 

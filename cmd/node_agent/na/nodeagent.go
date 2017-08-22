@@ -54,7 +54,7 @@ type Config struct {
 	// Service Identity
 	ServiceIdentity string
 
-	// Service Identity
+	// Organization for service Identity
 	ServiceIdentityOrg string
 
 	// Directory where service identity private key and certificate
@@ -173,12 +173,12 @@ func (na *nodeAgentInternal) sendCSR() ([]byte, *pb.Response, error) {
 	}
 	conn, err := grpc.Dial(na.config.IstioCAAddress, dialOptions...)
 	if err != nil {
-		glog.Fatalf("Failed ot dial %s: %v", na.config.IstioCAAddress, err)
+		glog.Fatalf("Failed to dial %s: %v", na.config.IstioCAAddress, err)
 	}
 
 	defer func() {
 		if closeErr := conn.Close(); closeErr != nil {
-			glog.Fatalf("Failed ot close connection")
+			glog.Fatalf("Failed to close connection")
 		}
 	}()
 
