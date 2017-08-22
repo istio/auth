@@ -53,8 +53,8 @@ func TestAuthenticat(t *testing.T) {
 		},
 		"With client certificate": {
 			certChain: [][]*x509.Certificate{
-				[]*x509.Certificate{
-					&x509.Certificate{
+				{
+					{
 						Extensions: []pkix.Extension{*sanExt},
 					},
 				},
