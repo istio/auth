@@ -34,8 +34,8 @@ type clientCertAuthenticator struct{}
 
 // authenticate extracts identities from presented client certificates. This
 // method assumes that certificate chain has been properly validated before
-// this method is called. In other words, this method does not do chain
-// validation itself.
+// this method is called. In other words, this method does not do certificate
+// chain validation itself.
 func (cca *clientCertAuthenticator) authenticate(ctx context.Context) *user {
 	peer, ok := peer.FromContext(ctx)
 	if !ok {
