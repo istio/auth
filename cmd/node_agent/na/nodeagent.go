@@ -73,8 +73,7 @@ type cAGrpcClientImpl struct {
 func (c *cAGrpcClientImpl) SendCSR(req *pb.Request) (*pb.Response, error) {
 	conn, err := grpc.Dial(*c.cAAddress, c.dialOptions...)
 	if err != nil {
-		glog.Errorf("Failed to dial %s: %s", *c.cAAddress, err)
-		return nil, err
+		return nil, fmt.Errorf("Failed to dial %s: %s", *c.cAAddress, err)
 	}
 	defer func() {
 		if closeErr := conn.Close(); closeErr != nil {
@@ -84,8 +83,7 @@ func (c *cAGrpcClientImpl) SendCSR(req *pb.Request) (*pb.Response, error) {
 	client := pb.NewIstioCAServiceClient(conn)
 	resp, err := client.HandleCSR(context.Background(), req)
 	if err != nil {
-		glog.Errorf("CSR request failed %v", err)
-		return nil, err
+		return nil, fmt.Errorf("CSR request failed %v", err)
 	}
 	return resp, nil
 }
@@ -102,15 +100,11 @@ type nodeAgentInternal struct {
 // Start the node Agent.
 func (na *nodeAgentInternal) Start() error {
 	if na.config == nil {
-		retErr := fmt.Errorf("node Agent configuration is nil")
-		glog.Error(retErr)
-		return retErr
+		return fmt.Errorf("node Agent configuration is nil")
 	}
 
 	if !na.pr.IsProperPlatform() {
-		retErr := fmt.Errorf("node Agent is not running on the right platform")
-		glog.Error(retErr)
-		return retErr
+		return fmt.Errorf("node Agent is not running on the right platform")
 	}
 
 	glog.Infof("Node Agent starts successfully.")
