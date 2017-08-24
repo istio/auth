@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"istio.io/auth/pkg/cmd"
 	"istio.io/auth/pkg/pki/ca/controller"
 	"istio.io/auth/pkg/pki/testutil"
 
@@ -62,7 +63,7 @@ func init() {
 	flags.StringVar(&opts.containerTag, "tag", "", "Tag for Istio CA image")
 	flags.StringVarP(&opts.kubeconfig, "kube-config", "k", "~/.kube/config", "path to kubeconfig file")
 
-	addFlags(rootCmd)
+	cmd.InitializeFlags(rootCmd)
 }
 
 func main() {
@@ -192,7 +193,7 @@ func examineSecret(secret *v1.Secret, expectedID string) {
 	cert := secret.Data[controller.CertChainID]
 	root := secret.Data[controller.RootCertID]
 	verifyFields := &testutil.VerifyFields{
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		IsCA:        false,
 	}
@@ -246,20 +247,4 @@ func waitForSecretExist(secretName string, timeToWait time.Duration) (*v1.Secret
 			return nil, fmt.Errorf("secret %v/%v did not become existent within %v", opts.namespace, secretName, timeToWait)
 		}
 	}
-}
-
-// addFlags carries over glog flags with new defaults
-func addFlags(rootCmd *cobra.Command) {
-	flag.CommandLine.VisitAll(func(gf *flag.Flag) {
-		switch gf.Name {
-		case "logtostderr":
-			if err := gf.Value.Set("true"); err != nil {
-				fmt.Printf("missing logtostderr flag: %v", err)
-			}
-		case "log_dir", "stderrthreshold":
-			// always use stderr for logging
-		default:
-			rootCmd.PersistentFlags().AddGoFlag(gf)
-		}
-	})
 }
