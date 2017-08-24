@@ -33,6 +33,8 @@ var (
 )
 
 func init() {
+	na.InitializeConfig(&naConfig)
+
 	flags := rootCmd.Flags()
 
 	flags.StringVar(&naConfig.ServiceIdentity, "service-identity", "", "Service Identity the node agent is managing")

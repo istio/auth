@@ -32,44 +32,7 @@ const (
 	ONPREM int = iota // 0
 	// GCP Node Agent
 	GCP // 1
-	// certRequestRetrialInterval is the retrial interval for certificate requests.
-	certRequestRetrialInterval = time.Second * 5
-	// certRequestMaxRetries is the number of retries for certificate requests.
-	certRequestMaxRetries = 5
-	// certRenewalGracePeriodPercentage indicates the length of the grace period in the
-	// percentage of the entire certificate TTL.
-	certRenewalGracePeriodPercentage = 50
 )
-
-// Config is Node agent configuration that is provided from CLI.
-type Config struct {
-	// Root CA cert file
-	RootCACertFile string
-
-	// Node Identity key file
-	NodeIdentityPrivateKeyFile string
-
-	// Node Identity certificate file
-	NodeIdentityCertFile string
-
-	// Service Identity
-	ServiceIdentity string
-
-	// Organization for service Identity
-	ServiceIdentityOrg string
-
-	// Directory where service identity private key and certificate
-	// are written.
-	ServiceIdentityDir string
-
-	RSAKeySize int
-
-	// Istio CA grpc server
-	IstioCAAddress string
-
-	// The environment this node agent is running on
-	Env int
-}
 
 // This interface is provided for implementing platform specific code.
 type platformSpecificRequest interface {
@@ -82,18 +45,35 @@ type platformSpecificRequest interface {
 // CAGrpcClient is for implementing the GRPC client to talk to CA.
 type CAGrpcClient interface {
 	// Send CSR to the CA and gets the response or error.
-	SendCSR(*string, []grpc.DialOption, *pb.Request) (*pb.Response, error)
+	SendCSR(*pb.Request) (*pb.Response, error)
 }
 
-// CAGrpcClientImpl is a implementation of GRPC client to talk to CA.
-type CAGrpcClientImpl struct {
+// NewCAGrpcClient creates an implementation of CAGrpcClient.
+func NewCAGrpcClient(cfg *Config, pr platformSpecificRequest) (CAGrpcClient, error) {
+	if cfg.IstioCAAddress == "" {
+		return nil, fmt.Errorf("Istio CA address is empty")
+	}
+	dialOptions, optionErr := pr.GetDialOptions(cfg)
+	if optionErr != nil {
+		return nil, optionErr
+	}
+	return &cAGrpcClientImpl{
+		&cfg.IstioCAAddress,
+		dialOptions,
+	}, nil
+}
+
+// cAGrpcClientImpl is a implementation of GRPC client to talk to CA.
+type cAGrpcClientImpl struct {
+	cAAddress   *string
+	dialOptions []grpc.DialOption
 }
 
 // SendCSR sends CSR to CA through GRPC.
-func (c *CAGrpcClientImpl) SendCSR(address *string, options []grpc.DialOption, req *pb.Request) (*pb.Response, error) {
-	conn, err := grpc.Dial(*address, options...)
+func (c *cAGrpcClientImpl) SendCSR(req *pb.Request) (*pb.Response, error) {
+	conn, err := grpc.Dial(*c.cAAddress, c.dialOptions...)
 	if err != nil {
-		glog.Errorf("Failed to dial %s: %s", *address, err)
+		glog.Errorf("Failed to dial %s: %s", *c.cAAddress, err)
 		return nil, err
 	}
 	defer func() {
@@ -119,13 +99,8 @@ type nodeAgentInternal struct {
 	cAClient CAGrpcClient
 }
 
-// Start the node Agent with default setups.
+// Start the node Agent.
 func (na *nodeAgentInternal) Start() error {
-	return na.StartWithArgs(certRequestRetrialInterval, certRequestMaxRetries, certRenewalGracePeriodPercentage)
-}
-
-// Start the node Agent with configs about retries.
-func (na *nodeAgentInternal) StartWithArgs(interval time.Duration, maxRetries int, gracePeriodPercentage int) error {
 	if na.config == nil {
 		retErr := fmt.Errorf("node Agent configuration is nil")
 		glog.Error(retErr)
@@ -139,27 +114,22 @@ func (na *nodeAgentInternal) StartWithArgs(interval time.Duration, maxRetries in
 	}
 
 	glog.Infof("Node Agent starts successfully.")
+
 	retries := 0
-	retrialInterval := interval
+	retrialInterval := na.config.CSRInitialRetrialInterval
 	success := false
 	for {
 		privKey, req, reqErr := na.createRequest()
 		if reqErr != nil {
-			glog.Error(reqErr)
 			return reqErr
-		}
-
-		dialOptions, optionErr := na.pr.GetDialOptions(na.config)
-		if optionErr != nil {
-			glog.Error(optionErr)
-			return optionErr
 		}
 
 		glog.Infof("Sending CSR (retrial #%d) ...", retries)
 
-		resp, err := na.cAClient.SendCSR(&na.config.IstioCAAddress, dialOptions, req)
+		resp, err := na.cAClient.SendCSR(req)
 		if err == nil && resp != nil && resp.IsApproved {
-			waitTime, ttlErr := na.getWaitTimeFromCert(resp.SignedCertChain, time.Now(), gracePeriodPercentage)
+			waitTime, ttlErr := na.getWaitTimeFromCert(
+				resp.SignedCertChain, time.Now(), na.config.CSRGracePeriodPercentage)
 			if ttlErr != nil {
 				glog.Errorf("Error getting TTL from approved cert: %v", ttlErr)
 				success = false
@@ -167,13 +137,11 @@ func (na *nodeAgentInternal) StartWithArgs(interval time.Duration, maxRetries in
 				timer := time.NewTimer(waitTime)
 				writeErr := na.writeToFile(privKey, resp.SignedCertChain)
 				if writeErr != nil {
-					retErr := fmt.Errorf("file write error: %v", writeErr)
-					glog.Error(retErr)
-					return retErr
+					return fmt.Errorf("file write error: %v", writeErr)
 				}
 				glog.Infof("CSR is approved successfully. Will renew cert in %s", waitTime.String())
 				retries = 0
-				retrialInterval = certRequestRetrialInterval
+				retrialInterval = na.config.CSRInitialRetrialInterval
 				<-timer.C
 				success = true
 			}
@@ -182,11 +150,9 @@ func (na *nodeAgentInternal) StartWithArgs(interval time.Duration, maxRetries in
 		}
 
 		if !success {
-			if retries >= maxRetries {
-				retErr := fmt.Errorf(
-					"node agent can't get the CSR approved from Istio CA after max number of retries (%d)", maxRetries)
-				glog.Error(retErr)
-				return retErr
+			if retries >= na.config.CSRMaxRetries {
+				return fmt.Errorf(
+					"node agent can't get the CSR approved from Istio CA after max number of retries (%d)", na.config.CSRMaxRetries)
 			}
 			if err != nil {
 				glog.Errorf("CSR signing failed: %v. Will retry in %s", err, retrialInterval.String())
