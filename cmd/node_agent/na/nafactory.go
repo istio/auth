@@ -22,7 +22,7 @@ import (
 // NodeAgent interface that should be implemented by
 // various platform specific node agents.
 type NodeAgent interface {
-	Start()
+	Start() error
 }
 
 // NewNodeAgent is constructor for Node agent based on the provided Environment variable.

@@ -25,7 +25,10 @@ go_library(
 go_test(
     name = "go_default_test",
     size = "small",
-    srcs = ["gcp_test.go"],
+    srcs = [
+      "gcp_test.go",
+      "nodeagent_test.go",
+    ],
     library = ":go_default_library",
     deps = ["@org_golang_google_grpc//:go_default_library"],
 )

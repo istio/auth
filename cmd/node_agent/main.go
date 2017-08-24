@@ -56,5 +56,7 @@ func main() {
 func runNodeAgent() {
 	nodeAgent := na.NewNodeAgent(&naConfig)
 	glog.Infof("Starting Node Agent")
-	nodeAgent.Start()
+	if err := nodeAgent.Start(); err != nil {
+		glog.Errorf("Node agent termitated with error: %v.", err)
+	}
 }
