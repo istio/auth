@@ -63,7 +63,7 @@ func NewCAGrpcClient(cfg *Config, pr platformSpecificRequest) (CAGrpcClient, err
 	}, nil
 }
 
-// cAGrpcClientImpl is a implementation of GRPC client to talk to CA.
+// cAGrpcClientImpl is an implementation of GRPC client to talk to CA.
 type cAGrpcClientImpl struct {
 	cAAddress   *string
 	dialOptions []grpc.DialOption
@@ -128,7 +128,6 @@ func (na *nodeAgentInternal) Start() error {
 				glog.Errorf("Error getting TTL from approved cert: %v", ttlErr)
 				success = false
 			} else {
-				timer := time.NewTimer(waitTime)
 				writeErr := na.writeToFile(privKey, resp.SignedCertChain)
 				if writeErr != nil {
 					return fmt.Errorf("file write error: %v", writeErr)
@@ -136,6 +135,7 @@ func (na *nodeAgentInternal) Start() error {
 				glog.Infof("CSR is approved successfully. Will renew cert in %s", waitTime.String())
 				retries = 0
 				retrialInterval = na.config.CSRInitialRetrialInterval
+				timer := time.NewTimer(waitTime)
 				<-timer.C
 				success = true
 			}
@@ -157,8 +157,8 @@ func (na *nodeAgentInternal) Start() error {
 			} else {
 				glog.Errorf("Certificate parsing error. Will retry in %s", retrialInterval.String())
 			}
-			timer := time.NewTimer(retrialInterval)
 			retries++
+			timer := time.NewTimer(retrialInterval)
 			// Exponentially increase the backoff time.
 			retrialInterval = retrialInterval * 2
 			<-timer.C
@@ -192,10 +192,12 @@ func (na *nodeAgentInternal) getWaitTimeFromCert(
 			cert.NotAfter, now)
 	}
 	gracePeriod := cert.NotAfter.Sub(cert.NotBefore) * time.Duration(gracePeriodPercentage) / time.Duration(100)
-	// Wait until the grace period starts.
+	// waitTime is the duration between now and the grace period starts.
+	// It is the time until cert expiration minus the length of grace period.
 	waitTime := timeToExpire - gracePeriod
 	if waitTime < 0 {
-		waitTime = 0
+		// We are within the grace period.
+		return time.Duration(0), fmt.Errorf("got a certificate that should be renewed now")
 	}
 	return waitTime, nil
 }

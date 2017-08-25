@@ -167,16 +167,16 @@ func TestGettingWaitTimeFromCert(t *testing.T) {
 			// Now is later than cert's NotAfter 2017-08-24 19:00:40 +0000 UTC.
 			cert: testCert,
 			now:  time.Date(2017, time.August, 25, 21, 00, 00, 40, time.UTC),
-			expectedErr: "certificate already expired at 2017-08-24 19:00:40 +0000 UTC, but now is" +
-				" 2017-08-25 21:00:00.00000004 +0000 UTC",
+			expectedErr: "certificate already expired at 2017-08-24 19:00:40 +0000" +
+				" UTC, but now is 2017-08-25 21:00:00.00000004 +0000 UTC",
 		},
-		"Zero waitTime": {
+		"Renew now": {
 			// Now = 2017-08-24 16:00:40 +0000 UTC
 			// Now is later than the start of grace period 2017-08-24 07:00:40 +0000 UTC, but earlier than
 			// cert expiration 2017-08-24 19:00:40 +0000 UTC.
-			cert:             testCert,
-			now:              time.Date(2017, time.August, 24, 16, 00, 00, 40, time.UTC),
-			expectedWaitTime: 0,
+			cert:        testCert,
+			now:         time.Date(2017, time.August, 24, 16, 00, 00, 40, time.UTC),
+			expectedErr: "got a certificate that should be renewed now",
 		},
 		"Invalid cert pem": {
 			cert:        `INVALIDCERT`,
