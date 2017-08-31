@@ -76,7 +76,7 @@ func TestGenCSRWithInvalidOption(t *testing.T) {
 }
 
 func TestGenCert(t *testing.T) {
-	// set "notBefore" to be 5 minutes aga, this ensures the issued certifiate to
+	// set "notBefore" to be 5 minutes ago, this ensures the issued certifiate to
 	// be valid as of now.
 	caCertNotBefore := now.Add(-5 * time.Minute)
 	caCertNotAfter := now.Add(24 * time.Hour)
