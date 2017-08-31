@@ -34,7 +34,16 @@ const (
 	idTokenIssuer     = "https://accounts.google.com"
 )
 
+// authSource represents where authentication result is derived from.
+type authSource int
+
+const (
+	authSourceClientCertificate authSource = iota
+	authSourceIDToken
+)
+
 type user struct {
+	authSource authSource
 	identities []string
 }
 
@@ -69,7 +78,10 @@ func (cca *clientCertAuthenticator) authenticate(ctx context.Context) *user {
 	}
 
 	ids := pki.ExtractIDs(chains[0][0].Extensions)
-	return &user{ids}
+	return &user{
+		authSource: authSourceClientCertificate,
+		identities: ids,
+	}
 }
 
 // An authenticator that extracts identity from JWT. The JWT is requied to be
@@ -103,7 +115,10 @@ func (ja *idTokenAuthenticator) authenticate(ctx context.Context) *user {
 		return nil
 	}
 
-	return &user{[]string{idToken.Subject}}
+	return &user{
+		authSource: authSourceIDToken,
+		identities: []string{idToken.Subject},
+	}
 }
 
 func extractBearerToken(ctx context.Context) string {
