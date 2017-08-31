@@ -37,7 +37,10 @@ func (fetcher *mockTokenFetcher) FetchToken() (string, error) {
 func TestGetDialOptions(t *testing.T) {
 	gcp := gcpPlatformImpl{&mockTokenFetcher{}}
 	config := &Config{RootCACertFile: "testdata/cert-chain-good.pem"}
-	options, _ := gcp.GetDialOptions(config)
+	options, err := gcp.GetDialOptions(config)
+	if err != nil {
+		t.Error(err)
+	}
 
 	// Make sure there're two dial options, one for TLS and one for JWT.
 	if len(options) != 2 {

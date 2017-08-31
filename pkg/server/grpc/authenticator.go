@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	httpAuthHeader    = "authorization"
 	bearerTokenPrefix = "Bearer "
+	httpAuthHeader    = "authorization"
 	idTokenIssuer     = "https://accounts.google.com"
 )
 

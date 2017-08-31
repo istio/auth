@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	httpAuthHeader    = "authorization"
 	bearerTokenScheme = "Bearer"
+	httpAuthHeader    = "authorization"
 )
 
 type jwtAccess struct {
