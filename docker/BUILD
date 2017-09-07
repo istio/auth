@@ -4,9 +4,7 @@ load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 pkg_tar(
     name = "istio_ca_tar",
     extension = "tar.gz",
-    files = [
-        "//cmd/istio_ca:istio_ca",
-    ],
+    srcs = [ "//cmd/istio_ca:istio_ca" ],
     mode = "0755",
     package_dir = "/usr/local/bin",
     tags = [ "manual" ],
