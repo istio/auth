@@ -34,7 +34,8 @@ var (
 )
 
 func init() {
-	markdownCmd.PersistentFlags().StringVar(&markdownOutputDir, "dir", ".", "Output directory for generated markdown files")
+	markdownCmd.PersistentFlags().StringVar(&markdownOutputDir, "dir", ".",
+		"Output directory for generated markdown files")
 
 	rootCmd.AddCommand(markdownCmd)
 }
