@@ -1,6 +1,6 @@
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
 
-// TODO: also rename the binary to istio-node-agent
+# TODO: also rename the binary to istio-auth-node-agent
 pkg_tar(
     name = "agent-bin",
     files = [
