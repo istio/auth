@@ -16,14 +16,11 @@ package na
 
 import (
 	"testing"
-
-	"google.golang.org/grpc"
 )
 
 func TestGetServiceIdentity(t *testing.T) {
 	testCases := map[string]struct {
 		config      *Config
-		options     []grpc.DialOption
 		filename    string
 		expectedID  string
 		expectedErr string
@@ -89,7 +86,6 @@ func TestGetServiceIdentity(t *testing.T) {
 func TestGetDialOptions2(t *testing.T) {
 	testCases := map[string]struct {
 		config      *Config
-		options     []grpc.DialOption
 		expectedErr string
 	}{
 		"Good cert": {

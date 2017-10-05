@@ -61,9 +61,8 @@ type FakePlatformSpecificRequest struct {
 }
 
 func (f FakePlatformSpecificRequest) GetDialOptions(*Config) ([]grpc.DialOption, error) {
-	var err error
+	var err error = nil
 
-	err = nil
 	if len(f.dialOptionErr) > 0 {
 		err = errors.New(f.dialOptionErr)
 	}
@@ -72,9 +71,8 @@ func (f FakePlatformSpecificRequest) GetDialOptions(*Config) ([]grpc.DialOption,
 }
 
 func (f FakePlatformSpecificRequest) GetServiceIdentity() (string, error) {
-	var err error
+	var err error = nil
 
-	err = nil
 	if len(f.identityErr) > 0 {
 		err = errors.New(f.identityErr)
 	}
@@ -112,9 +110,8 @@ func (s *FakeIstioCAGrpcServer) SetResponseAndError(response *pb.Response, error
 }
 
 func (s *FakeIstioCAGrpcServer) HandleCSR(ctx context.Context, req *pb.Request) (*pb.Response, error) {
-	var err error
+	var err error = nil
 
-	err = nil
 	if len(s.errorMsg) > 0 {
 		err = errors.New(s.errorMsg)
 	}
@@ -272,7 +269,6 @@ func TestGettingWaitTimeFromCert(t *testing.T) {
 
 func TestSendCSRAgainstLocalInstance(t *testing.T) {
 	// create a local grpc server
-	grpc.WithInsecure()
 	s := grpc.NewServer()
 	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {

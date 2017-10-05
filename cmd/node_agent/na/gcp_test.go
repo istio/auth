@@ -34,9 +34,8 @@ type mockTokenFetcher struct {
 
 // A mock fetcher for FetchToken.
 func (fetcher *mockTokenFetcher) FetchToken() (string, error) {
-	var err error
+	var err error = nil
 
-	err = nil
 	if len(fetcher.errorMessage) > 0 {
 		err = errors.New(fetcher.errorMessage)
 	}
@@ -47,7 +46,6 @@ func (fetcher *mockTokenFetcher) FetchToken() (string, error) {
 func TestGetDialOptions(t *testing.T) {
 	testCases := map[string]struct {
 		config         *Config
-		configErr      string
 		optionsLen     int
 		token          string
 		tokenFetchErr  string
