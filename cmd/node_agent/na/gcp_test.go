@@ -34,7 +34,7 @@ type mockTokenFetcher struct {
 
 // A mock fetcher for FetchToken.
 func (fetcher *mockTokenFetcher) FetchToken() (string, error) {
-	var err error = nil
+	var err error
 
 	if len(fetcher.errorMessage) > 0 {
 		err = errors.New(fetcher.errorMessage)

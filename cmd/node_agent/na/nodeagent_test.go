@@ -61,7 +61,7 @@ type FakePlatformSpecificRequest struct {
 }
 
 func (f FakePlatformSpecificRequest) GetDialOptions(*Config) ([]grpc.DialOption, error) {
-	var err error = nil
+	var err error
 
 	if len(f.dialOptionErr) > 0 {
 		err = errors.New(f.dialOptionErr)
@@ -71,7 +71,7 @@ func (f FakePlatformSpecificRequest) GetDialOptions(*Config) ([]grpc.DialOption,
 }
 
 func (f FakePlatformSpecificRequest) GetServiceIdentity() (string, error) {
-	var err error = nil
+	var err error
 
 	if len(f.identityErr) > 0 {
 		err = errors.New(f.identityErr)
@@ -110,7 +110,7 @@ func (s *FakeIstioCAGrpcServer) SetResponseAndError(response *pb.Response, error
 }
 
 func (s *FakeIstioCAGrpcServer) HandleCSR(ctx context.Context, req *pb.Request) (*pb.Response, error) {
-	var err error = nil
+	var err error
 
 	if len(s.errorMsg) > 0 {
 		err = errors.New(s.errorMsg)
