@@ -15,7 +15,12 @@
 package credential
 
 import (
+	"encoding/json"
+	"errors"
+
 	"cloud.google.com/go/compute/metadata"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
+	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 // TokenFetcher defines the interface to fetch token.
@@ -30,12 +35,49 @@ type GcpTokenFetcher struct {
 	Aud string
 }
 
+// AwsTokenFetcher implements the token fetcher in AWS.
+// It gets the EC2 instance identity document as described
+// in the doc: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
+type AwsTokenFetcher struct {
+}
+
+// IsOnAWS returns if node agent is running on AWS EC2 instance
+func (fetcher *AwsTokenFetcher) IsOnAWS() bool {
+	sess := session.Must(session.NewSession())
+	svc := ec2metadata.New(sess)
+	return svc.Available()
+}
+
+// FetchToken fetches the instance identity document as a string
+// Note: currently AWS Golang SDK does not verify the signature,
+// so this function is not very secure. We expect this bug to
+// be fixed in upstream.
+func (fetcher *AwsTokenFetcher) FetchToken() (string, error) {
+	sess := session.Must(session.NewSession())
+	svc := ec2metadata.New(sess)
+	if svc.Available() {
+		doc, err := svc.GetInstanceIdentityDocument()
+		if err == nil {
+			bytes, _ := json.Marshal(doc)
+			return string(bytes), nil
+		}
+	}
+	return "", errors.New("unable to get EC2 instance identity document")
+}
+
+// GetUserData fetches the userdata for the current instance
+func (fetcher *AwsTokenFetcher) GetUserData() (string, error) {
+	sess := session.Must(session.NewSession())
+	svc := ec2metadata.New(sess)
+	return svc.GetUserData()
+}
+
 func (fetcher *GcpTokenFetcher) getTokenURI() string {
 	// The GCE metadata service URI to get identity token of current (i.e., default) service account.
 	return "instance/service-accounts/default/identity?audience=" + fetcher.Aud
 }
 
-// FetchToken fetchs the GCE VM identity jwt token from its metadata server.
+// FetchToken fetches the GCE VM identity jwt token from its metadata server.
 // Note: this function only works in a GCE VM environment.
 func (fetcher *GcpTokenFetcher) FetchToken() (string, error) {
 	return metadata.Get(fetcher.getTokenURI())

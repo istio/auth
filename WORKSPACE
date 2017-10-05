@@ -290,6 +290,24 @@ go_repository(
     importpath = "google.golang.org/genproto",
 )
 
+go_repository(
+    name = "com_github_aws_aws-sdk-go",
+    importpath = "github.com/aws/aws-sdk-go",
+    tag = "v1.12.5",
+)
+
+go_repository(
+    name = "com_github_go_ini_ini",
+    importpath = "github.com/go-ini/ini",
+    tag = "v1.28.2",
+)
+
+go_repository(
+    name = "com_github_jmespath_go_jmespath",
+    importpath = "github.com/jmespath/go-jmespath",
+    tag = "0.2.2",
+)
+
 new_http_archive(
     name = "docker_ubuntu",
     build_file = "BUILD.ubuntu",
