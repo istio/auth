@@ -15,11 +15,17 @@
 package na
 
 import (
+	"errors"
 	"fmt"
+	"net"
 	"testing"
 	"time"
 
+	rpc "github.com/googleapis/googleapis/google/rpc"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	pb "istio.io/auth/proto"
 )
 
@@ -48,16 +54,32 @@ TUwOfQd26zZxdjg/Cl6pCT6yDQlUH7Pzf9pogM7gHjd9sFA=
 
 type FakePlatformSpecificRequest struct {
 	dialOption       []grpc.DialOption
+	dialOptionErr    string
 	identity         string
+	identityErr      string
 	isProperPlatform bool
 }
 
 func (f FakePlatformSpecificRequest) GetDialOptions(*Config) ([]grpc.DialOption, error) {
-	return f.dialOption, nil
+	var err error
+
+	err = nil
+	if len(f.dialOptionErr) > 0 {
+		err = errors.New(f.dialOptionErr)
+	}
+
+	return f.dialOption, err
 }
 
 func (f FakePlatformSpecificRequest) GetServiceIdentity() (string, error) {
-	return f.identity, nil
+	var err error
+
+	err = nil
+	if len(f.identityErr) > 0 {
+		err = errors.New(f.identityErr)
+	}
+
+	return f.identity, err
 }
 
 func (f FakePlatformSpecificRequest) IsProperPlatform() bool {
@@ -75,6 +97,31 @@ func (f *FakeCAClient) SendCSR(req *pb.Request, pr platformSpecificRequest, cfg 
 	return f.response, f.err
 }
 
+type FakeIstioCAGrpcServer struct {
+	IsApproved      bool
+	Status          *rpc.Status
+	SignedCertChain []byte
+
+	response *pb.Response
+	errorMsg string
+}
+
+func (s *FakeIstioCAGrpcServer) SetResponseAndError(response *pb.Response, errorMsg string) {
+	s.response = response
+	s.errorMsg = errorMsg
+}
+
+func (s *FakeIstioCAGrpcServer) HandleCSR(ctx context.Context, req *pb.Request) (*pb.Response, error) {
+	var err error
+
+	err = nil
+	if len(s.errorMsg) > 0 {
+		err = errors.New(s.errorMsg)
+	}
+
+	return s.response, err
+}
+
 func TestStartWithArgs(t *testing.T) {
 	generalConfig := Config{
 		"ca_addr", "ca_file", "pkey", "cert_file", "Google Inc.", 512, "onprem", time.Millisecond, 3, 50,
@@ -87,14 +134,14 @@ func TestStartWithArgs(t *testing.T) {
 		sendTimes   int
 	}{
 		"Config Nil error": {
-			req:         FakePlatformSpecificRequest{nil, "service1", true},
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, nil, nil},
 			expectedErr: "node Agent configuration is nil",
 			sendTimes:   0,
 		},
 		"Platform error": {
 			config:      &generalConfig,
-			req:         FakePlatformSpecificRequest{nil, "service1", false},
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", false},
 			cAClient:    &FakeCAClient{0, nil, nil},
 			expectedErr: "node Agent is not running on the right platform",
 			sendTimes:   0,
@@ -104,35 +151,42 @@ func TestStartWithArgs(t *testing.T) {
 			config: &Config{
 				"ca_addr", "ca_file", "pkey", "cert_file", "Google Inc.", 128, "onprem", time.Millisecond, 3, 50,
 			},
-			req:         FakePlatformSpecificRequest{nil, "service1", true},
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, nil, nil},
 			expectedErr: "failed to generate CSR: crypto/rsa: message too long for RSA public key size",
 			sendTimes:   0,
 		},
 		"SendCSR empty response error": {
 			config:      &generalConfig,
-			req:         FakePlatformSpecificRequest{nil, "service1", true},
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, nil, nil},
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
 		},
 		"SendCSR returns error": {
 			config:      &generalConfig,
-			req:         FakePlatformSpecificRequest{nil, "service1", true},
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
+			cAClient:    &FakeCAClient{0, nil, fmt.Errorf("Error returned from CA")},
+			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
+			sendTimes:   4,
+		},
+		"SendCSR returns error 2": {
+			config:      &generalConfig,
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, nil, fmt.Errorf("Error returned from CA")},
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
 		},
 		"SendCSR not approved": {
 			config:      &generalConfig,
-			req:         FakePlatformSpecificRequest{nil, "service1", true},
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, &pb.Response{IsApproved: false}, nil},
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
 		},
 		"SendCSR parsing error": {
 			config:      &generalConfig,
-			req:         FakePlatformSpecificRequest{nil, "service1", true},
+			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, &pb.Response{IsApproved: true, SignedCertChain: []byte(`INVALIDCERT`)}, nil},
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
@@ -194,7 +248,7 @@ func TestGettingWaitTimeFromCert(t *testing.T) {
 		config := Config{
 			"ca_addr", "ca_file", "pkey", "cert_file", "Google Inc.", 512, "onprem", time.Millisecond, 3, 50,
 		}
-		req := FakePlatformSpecificRequest{nil, "service1", true}
+		req := FakePlatformSpecificRequest{nil, "", "service1", "", true}
 		caClient := FakeCAClient{0, nil, nil}
 		na := nodeAgentInternal{&config, req, &caClient, "service1"}
 		waitTime, err := na.getWaitTimeFromCert([]byte(c.cert), c.now, 50)
@@ -211,6 +265,123 @@ func TestGettingWaitTimeFromCert(t *testing.T) {
 			}
 			if int(waitTime.Seconds()) != c.expectedWaitTime {
 				t.Errorf("%s: incorrect waittime. Expected %ds, but got %ds.", id, c.expectedWaitTime, int(waitTime.Seconds()))
+			}
+		}
+	}
+}
+
+func TestSendCSRAgainstLocalInstance(t *testing.T) {
+	// create a local grpc server
+	grpc.WithInsecure()
+	s := grpc.NewServer()
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Errorf("failed to listen: %v", err)
+	}
+	serv := FakeIstioCAGrpcServer{}
+
+	go func() {
+		defer func() {
+			s.Stop()
+		}()
+		pb.RegisterIstioCAServiceServer(s, &serv)
+		reflection.Register(s)
+		if err := s.Serve(lis); err != nil {
+			t.Errorf("failed to serve: %v", err)
+		}
+	}()
+
+	defaultServerResponse := pb.Response{
+		IsApproved:      true,
+		Status:          &rpc.Status{Code: int32(rpc.OK), Message: "OK"},
+		SignedCertChain: nil,
+	}
+
+	testCases := map[string]struct {
+		config      *Config
+		req         platformSpecificRequest
+		res         pb.Response
+		resErr      string
+		cAClient    *cAGrpcClientImpl
+		expectedErr string
+	}{
+		"IstioCAAddress is empty": {
+			config: &Config{
+				IstioCAAddress: "",
+				RSAKeySize:     512,
+			},
+			req: FakePlatformSpecificRequest{[]grpc.DialOption{
+				grpc.WithInsecure(),
+			}, "", "service1", "", true},
+			res:         defaultServerResponse,
+			cAClient:    &cAGrpcClientImpl{},
+			expectedErr: "Istio CA address is empty",
+		},
+		"IstioCAAddress is incorrect": {
+			config: &Config{
+				IstioCAAddress: lis.Addr().String() + "1",
+				RSAKeySize:     512,
+			},
+			req: FakePlatformSpecificRequest{[]grpc.DialOption{
+				grpc.WithInsecure(),
+			}, "", "service1", "", true},
+			res:         defaultServerResponse,
+			cAClient:    &cAGrpcClientImpl{},
+			expectedErr: "CSR request failed rpc error: code = 14 desc = grpc: the connection is unavailable",
+		},
+		"Without Insecure option": {
+			config: &Config{
+				IstioCAAddress: lis.Addr().String(),
+				RSAKeySize:     512,
+			},
+			req:      FakePlatformSpecificRequest{[]grpc.DialOption{}, "", "service1", "", true},
+			res:      defaultServerResponse,
+			cAClient: &cAGrpcClientImpl{},
+			expectedErr: fmt.Sprintf("Failed to dial %s: grpc: no transport security set "+
+				"(use grpc.WithInsecure() explicitly or set credentials)", lis.Addr().String()),
+		},
+		"Error from GetDialOptions": {
+			config: &Config{
+				IstioCAAddress: lis.Addr().String(),
+				RSAKeySize:     512,
+			},
+			req: FakePlatformSpecificRequest{[]grpc.DialOption{
+				grpc.WithInsecure(),
+			}, "Error from GetDialOptions", "service1", "", true},
+			res:         defaultServerResponse,
+			cAClient:    &cAGrpcClientImpl{},
+			expectedErr: "Error from GetDialOptions",
+		},
+		"SendCSR not approved": {
+			config: &Config{
+				IstioCAAddress: lis.Addr().String(),
+				RSAKeySize:     512,
+			},
+			req: FakePlatformSpecificRequest{[]grpc.DialOption{
+				grpc.WithInsecure(),
+			}, "", "service1", "", true},
+			res:         defaultServerResponse,
+			cAClient:    &cAGrpcClientImpl{},
+			expectedErr: "",
+		},
+	}
+
+	for id, c := range testCases {
+		na := nodeAgentInternal{c.config, c.req, c.cAClient, "service1"}
+
+		serv.SetResponseAndError(&c.res, c.resErr)
+
+		_, req, _ := na.createRequest()
+		_, err := na.cAClient.SendCSR(req, na.pr, na.config)
+		if len(c.expectedErr) > 0 {
+			if err == nil {
+				t.Errorf("Error expected: %v", c.expectedErr)
+			} else if err.Error() != c.expectedErr {
+				t.Errorf("%s: incorrect error message: [%s] VS [%s]", id, err.Error(), c.expectedErr)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("Unexpected expected: %v", err)
 			}
 		}
 	}

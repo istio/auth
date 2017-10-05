@@ -22,6 +22,7 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+
 	"istio.io/auth/pkg/pki"
 	"istio.io/auth/pkg/pki/ca"
 	pb "istio.io/auth/proto"

@@ -27,11 +27,17 @@ go_test(
     name = "go_default_test",
     size = "small",
     srcs = [
+        "config_test.go",
         "gcp_test.go",
+        "nafactory_test.go",
         "nodeagent_test.go",
         "onprem_test.go",
     ],
     data = glob(["testdata/*"]),
     library = ":go_default_library",
-    deps = ["@org_golang_google_grpc//:go_default_library"],
+    deps = [
+        "@com_github_googleapis_googleapis//:google/rpc",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//reflection:go_default_library",
+    ],
 )

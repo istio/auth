@@ -15,9 +15,9 @@
 package na
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/golang/glog"
 	cred "istio.io/auth/pkg/credential"
 )
 
@@ -28,9 +28,9 @@ type NodeAgent interface {
 }
 
 // NewNodeAgent is constructor for Node agent based on the provided Environment variable.
-func NewNodeAgent(cfg *Config) NodeAgent {
+func NewNodeAgent(cfg *Config) (NodeAgent, error) {
 	if cfg == nil {
-		glog.Fatalf("Nil configuration passed")
+		return nil, errors.New("Nil configuration passed")
 	}
 	na := &nodeAgentInternal{
 		config: cfg,
@@ -42,10 +42,10 @@ func NewNodeAgent(cfg *Config) NodeAgent {
 	case "gcp":
 		na.pr = &gcpPlatformImpl{&cred.GcpTokenFetcher{Aud: fmt.Sprintf("grpc://%s", cfg.IstioCAAddress)}}
 	default:
-		glog.Fatalf("Invalid env %s specified", cfg.Env)
+		return nil, fmt.Errorf("Invalid env %s specified", cfg.Env)
 	}
 
 	cAClient := &cAGrpcClientImpl{}
 	na.cAClient = cAClient
-	return na
+	return na, nil
 }

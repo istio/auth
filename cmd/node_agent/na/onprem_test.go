@@ -16,30 +16,54 @@ package na
 
 import (
 	"testing"
+
+	"google.golang.org/grpc"
 )
 
 func TestGetServiceIdentity(t *testing.T) {
 	testCases := map[string]struct {
+		config      *Config
+		options     []grpc.DialOption
 		filename    string
 		expectedID  string
 		expectedErr string
 	}{
 		"Good cert1": {
+			config: &Config{
+				CertChainFile:  "",
+				KeyFile:        "",
+				RootCACertFile: "",
+			},
 			filename:    "testdata/cert-chain-good.pem",
 			expectedID:  "spiffe://cluster.local/ns/default/sa/default",
 			expectedErr: "",
 		},
 		"Good cert2": {
+			config: &Config{
+				CertChainFile:  "",
+				KeyFile:        "",
+				RootCACertFile: "",
+			},
 			filename:    "testdata/cert-chain-good2.pem",
 			expectedID:  "spiffe://cluster.local/ns/default/sa/default",
 			expectedErr: "",
 		},
 		"Bad cert format": {
+			config: &Config{
+				CertChainFile:  "",
+				KeyFile:        "",
+				RootCACertFile: "",
+			},
 			filename:    "testdata/cert-chain-bad1.pem",
 			expectedID:  "",
 			expectedErr: "Invalid PEM encoded certificate",
 		},
 		"Wrong file": {
+			config: &Config{
+				CertChainFile:  "",
+				KeyFile:        "",
+				RootCACertFile: "",
+			},
 			filename:    "testdata/cert-chain-bad2.pem",
 			expectedID:  "",
 			expectedErr: "open testdata/cert-chain-bad2.pem: no such file or directory",
@@ -58,6 +82,60 @@ func TestGetServiceIdentity(t *testing.T) {
 			}
 		} else if identity != c.expectedID {
 			t.Errorf("%s: GetServiceIdentity returns identity: %s. It should be %s.", id, identity, c.expectedID)
+		}
+	}
+}
+
+func TestGetDialOptions2(t *testing.T) {
+	testCases := map[string]struct {
+		config      *Config
+		options     []grpc.DialOption
+		expectedErr string
+	}{
+		"Good cert": {
+			config: &Config{
+				CertChainFile:  "testdata/cert.pem",
+				KeyFile:        "testdata/priv.pem",
+				RootCACertFile: "testdata/cert.ca.pem",
+			},
+			expectedErr: "",
+		},
+		"Loaing failure": {
+			config: &Config{
+				CertChainFile:  "testdata/cert.pem",
+				KeyFile:        "testdata/priv_not_exist.pem",
+				RootCACertFile: "testdata/cert.ca.pem",
+			},
+			expectedErr: "Cannot load key pair: open testdata/priv_not_exist.pem: no such file or directory",
+		},
+		"Loaing root cert failure": {
+			config: &Config{
+				CertChainFile:  "testdata/cert.pem",
+				KeyFile:        "testdata/priv.pem",
+				RootCACertFile: "testdata/cert_not_exist.ca.pem",
+			},
+			expectedErr: "Failed to read CA cert: open testdata/cert_not_exist.ca.pem: no such file or directory",
+		},
+	}
+
+	for id, c := range testCases {
+		onprem := onPremPlatformImpl{""}
+
+		options, err := onprem.GetDialOptions(c.config)
+		t.Logf("%v %v %v", id, options, err)
+
+		for _, option := range options {
+			t.Logf("%v", option)
+		}
+
+		if len(c.expectedErr) > 0 {
+			if err == nil {
+				t.Errorf("Succeeded. Error expected: %v", err)
+			} else if err.Error() != c.expectedErr {
+				t.Errorf("%s: incorrect error message: %s VS %s", id, err.Error(), c.expectedErr)
+			}
+		} else if err != nil {
+			t.Errorf("Unexpected Error: %v", err)
 		}
 	}
 }
