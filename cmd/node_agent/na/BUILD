@@ -8,12 +8,15 @@ go_library(
         "nafactory.go",
         "nodeagent.go",
         "onprem.go",
+        "util.go",
     ],
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/credential:go_default_library",
         "//pkg/pki:go_default_library",
         "//pkg/pki/ca:go_default_library",
+        "//pkg/util:go_default_library",
+        "//pkg/workloadio:go_default_library",
         "//proto:go_default_library",
         "@com_github_golang_glog//:go_default_library",
         "@com_google_cloud_go//compute/metadata:go_default_library",
@@ -33,5 +36,8 @@ go_test(
     ],
     data = glob(["testdata/*"]),
     library = ":go_default_library",
-    deps = ["@org_golang_google_grpc//:go_default_library"],
+    deps = [
+        "//pkg/util/mock:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+    ],
 )
