@@ -19,6 +19,8 @@ import (
 
 	"github.com/golang/glog"
 	cred "istio.io/auth/pkg/credential"
+	"istio.io/auth/pkg/util"
+	"istio.io/auth/pkg/workloadio"
 )
 
 // NodeAgent interface that should be implemented by
@@ -34,6 +36,7 @@ func NewNodeAgent(cfg *Config) NodeAgent {
 	}
 	na := &nodeAgentInternal{
 		config: cfg,
+		cu:     CertUtilImpl{},
 	}
 
 	switch cfg.Env {
@@ -47,5 +50,18 @@ func NewNodeAgent(cfg *Config) NodeAgent {
 
 	cAClient := &cAGrpcClientImpl{}
 	na.cAClient = cAClient
+
+	workloadIO, err := workloadio.NewWorkloadIO(
+		workloadio.Config{
+			workloadio.SECRETFILE,
+			util.FileUtilImpl{},
+			cfg.CertChainFile,
+			cfg.KeyFile,
+		},
+	)
+	if err != nil {
+		glog.Fatalf("Workload IO creation error: %v", err)
+	}
+	na.wlio = workloadIO
 	return na
 }
