@@ -28,8 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/apis/rbac/v1alpha1"
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/rbac/v1alpha1"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/golang/glog"
@@ -162,64 +162,66 @@ func deleteTestNamespace(clientset kubernetes.Interface) {
 func deployIstioCA(clientset kubernetes.Interface) {
 	// Create ServiceAccount
 	serviceaccount := v1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta {
+		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "istio-ca-service-account",
+			Name:      "istio-ca-service-account",
 			Namespace: opts.namespace,
 		},
 	}
 	if _, err := clientset.CoreV1().ServiceAccounts(opts.namespace).Create(&serviceaccount); err != nil {
-		glog.Fatalf("failed to create clusterrole (error: %v)", err)
+		glog.Fatalf("failed to create serviceaccount (error: %v)", err)
 	}
-	// Create ClusterRole
-	clusterrole := v1alpha1.ClusterRole{
+	// Create Role
+	role := v1alpha1.Role{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "istio-ca-role",
+			Name:      "istio-ca-role",
+			Namespace: opts.namespace,
 		},
 		Rules: []v1alpha1.PolicyRule{
 			{
-				Verbs: []string{"create", "get", "watch", "list", "update"},
-				APIGroups: []string{"istio.io"},
+				Verbs:     []string{"create", "get", "watch", "list", "update"},
+				APIGroups: []string{"core", ""},
 				Resources: []string{"secrets"},
 			},
 			{
-				Verbs: []string{"get", "watch", "list"},
-				APIGroups: []string{"istio.io"},
+				Verbs:     []string{"get", "watch", "list"},
+				APIGroups: []string{"core", ""},
 				Resources: []string{"serviceaccounts"},
 			},
 		},
 	}
-	if _, err := clientset.RbacV1alpha1().ClusterRoles().Create(&clusterrole); err != nil {
-		glog.Fatalf("failed to create clusterrole (error: %v)", err)
+	if _, err := clientset.RbacV1alpha1().Roles(opts.namespace).Create(&role); err != nil {
+		glog.Fatalf("failed to create role (error: %v)", err)
 	}
-	// CreateClusterRoleBinding
-	clusterrolebinding := v1alpha1.ClusterRoleBinding{
+	// CreateRoleBinding
+	rolebinding := v1alpha1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "istio-ca-role-binding",
+			Name:      "istio-ca-role-binding",
+			Namespace: opts.namespace,
 		},
 		Subjects: []v1alpha1.Subject{
 			{
-				Kind: "ServiceAccount",
-				Name: "istio-ca-service-account",
+				Kind:      "ServiceAccount",
+				Name:      "default",
 				Namespace: opts.namespace,
 			},
 		},
 		RoleRef: v1alpha1.RoleRef{
-			Kind: "ClusterRole",
-			Name: "istio-ca",
+			Kind:     "Role",
+			Name:     "istio-ca-role",
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}
-	if _, err := clientset.RbacV1alpha1().ClusterRoleBindings().Create(&clusterrolebinding); err != nil {
-		glog.Fatalf("failed to create clusterrolebinding (error: %v)", err)
+	if _, err := clientset.RbacV1alpha1().RoleBindings(opts.namespace).Create(&rolebinding); err != nil {
+		glog.Fatalf("failed to create rolebinding (error: %v)", err)
 	}
 	// Create Deployment
 	envVar := v1.EnvVar{
@@ -236,7 +238,9 @@ func deployIstioCA(clientset kubernetes.Interface) {
 		Name:  "istio-ca-container",
 		Image: fmt.Sprintf("%v/%v:%v", opts.containerHub, opts.containerImage, opts.containerTag),
 	}
-	spec := v1.PodSpec{Containers: []v1.Container{container}}
+	spec := v1.PodSpec{
+		Containers: []v1.Container{container},
+	}
 	uuid := string(uuid.NewUUID())
 	objectMeta := metav1.ObjectMeta{
 		Labels: map[string]string{"uuid": uuid},
