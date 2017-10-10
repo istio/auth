@@ -160,19 +160,6 @@ func deleteTestNamespace(clientset kubernetes.Interface) {
 }
 
 func deployIstioCA(clientset kubernetes.Interface) {
-	// Create ServiceAccount
-	serviceaccount := v1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istio-ca-service-account",
-			Namespace: opts.namespace,
-		},
-	}
-	if _, err := clientset.CoreV1().ServiceAccounts(opts.namespace).Create(&serviceaccount); err != nil {
-		glog.Fatalf("failed to create serviceaccount (error: %v)", err)
-	}
 	// Create Role
 	role := v1alpha1.Role{
 		TypeMeta: metav1.TypeMeta{
