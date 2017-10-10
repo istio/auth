@@ -72,3 +72,7 @@ func (na *gcpPlatformImpl) GetServiceIdentity() (string, error) {
 	// TODO(wattli): update this once we are ready for GCE
 	return "", nil
 }
+
+func (na *gcpPlatformImpl) GetAgentCredential() ([]byte, error) {
+	return []byte{}, nil
+}

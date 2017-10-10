@@ -15,6 +15,7 @@
 package na
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -58,6 +59,54 @@ func TestGetServiceIdentity(t *testing.T) {
 			}
 		} else if identity != c.expectedID {
 			t.Errorf("%s: GetServiceIdentity returns identity: %s. It should be %s.", id, identity, c.expectedID)
+		}
+	}
+}
+
+func TestGetAgentCredential(t *testing.T) {
+	testCases := map[string]struct {
+		filename      string
+		expectedBytes []byte
+		expectedErr   string
+	}{
+		"Existing cert": {
+			filename: "testdata/cert-chain-good2.pem",
+			expectedBytes: []byte(`-----BEGIN CERTIFICATE-----
+MIICJDCCAY2gAwIBAgIRAISsfIdj+hB82Gzeg+hKaTMwDQYJKoZIhvcNAQELBQAw
+GzEZMBcGA1UECgwQaW50ZXJtZWRpYXRlX29yZzAeFw0xNzA4MzAyMTA0NDlaFw0x
+NzA4MzAyMjA0NDlaMAsxCTAHBgNVBAoTADCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAvh7gHHpZ55TwnPz7XEITzur76h0IbvK4sUAeDpcl4rnLE7CqUqLkr7gN
+M2KqTrWziQvK4ylGjxtY4VVu54Bek6nGxnu3QVGUqqRQrFIGCk7zXsfkkaR/RaCy
+1yUPzl3BBuarfI5tpswKMTX2Vs9W3HKLfybdBDSZTh9EJ7puHKcCAwEAAaN4MHYw
+DgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAM
+BgNVHRMBAf8EAjAAMDcGA1UdEQQwMC6GLHNwaWZmZTovL2NsdXN0ZXIubG9jYWwv
+bnMvZGVmYXVsdC9zYS9kZWZhdWx0MA0GCSqGSIb3DQEBCwUAA4GBAGsN2+8fOwts
+TOI3vkuSlhCeLwV6Kj2Qby17ABabDMIPGMa8Z5DPesUHsO3alXEPDfKveHHJlUHW
+iASwRa/mTqJhPmlgLMkj6yveE0WN8ElTNoNOv9kqnuZYtvi9tpds+Hhkc+1+ZqXm
+ez8W3DDgwfvHQOzz9qnTQBxHcKktLA62
+-----END CERTIFICATE-----
+`),
+			expectedErr: "",
+		},
+		"Missing cert": {
+			filename:      "testdata/fake-cert.pem",
+			expectedBytes: nil,
+			expectedErr:   "Failed to read cert file: testdata/fake-cert.pem",
+		},
+	}
+
+	for id, c := range testCases {
+		onprem := onPremPlatformImpl{c.filename}
+		cred, err := onprem.GetAgentCredential()
+		if c.expectedErr != "" {
+			if err == nil {
+				t.Errorf("%s: no error is returned.", id)
+			}
+			if err.Error() != c.expectedErr {
+				t.Errorf("%s: incorrect error message: %s VS %s", id, err.Error(), c.expectedErr)
+			}
+		} else if !bytes.Equal(cred, c.expectedBytes) {
+			t.Errorf("%s: GetAgentCredential returns bytes: %s. It should be %s.", id, cred, c.expectedBytes)
 		}
 	}
 }
