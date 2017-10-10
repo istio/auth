@@ -185,7 +185,7 @@ func deployIstioCA(clientset kubernetes.Interface) {
 	if _, err := clientset.RbacV1alpha1().Roles(opts.namespace).Create(&role); err != nil {
 		glog.Fatalf("failed to create role (error: %v)", err)
 	}
-	// CreateRoleBinding
+	// Create RoleBinding
 	rolebinding := v1alpha1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1beta1",
