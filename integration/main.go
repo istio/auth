@@ -38,7 +38,7 @@ import (
 const (
 	integrationTestNamespacePrefix = "istio-ca-integration-"
 	// Specifies how long we wait before a secret becomes existent.
-	secretWaitTime = 120 * time.Second
+	secretWaitTime = 20 * time.Second
 )
 
 var (
