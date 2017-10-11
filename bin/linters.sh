@@ -8,7 +8,7 @@ docker run \
   -v $(bazel info output_base):$(bazel info output_base) \
   -v $(pwd):/go/src/istio.io/auth \
   -w /go/src/istio.io/auth gcr.io/istio-testing/linter:${LINTER_SHA} \
-  --concurrency=4 --enable-gc --deadline=300s --disable-all --enable=maligned\
+  --concurrency=4 --enable-gc --deadline=300s --disable-all\
   --enable=aligncheck\
   --enable=deadcode\
   --enable=errcheck\
