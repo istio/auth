@@ -74,5 +74,11 @@ func (na *gcpPlatformImpl) GetServiceIdentity() (string, error) {
 }
 
 func (na *gcpPlatformImpl) GetAgentCredential() ([]byte, error) {
-	return []byte{}, nil
+	jwtKey, err := na.fetcher.FetchToken()
+	if err != nil {
+		glog.Errorf("Failed to get instance from GCE metadata %s, please make sure this binary is running on a GCE VM", err)
+		return nil, err
+	}
+
+	return []byte(jwtKey), nil
 }

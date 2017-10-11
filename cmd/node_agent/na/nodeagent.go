@@ -169,8 +169,7 @@ func (na *nodeAgentInternal) createRequest() ([]byte, *pb.Request, error) {
 		return nil, nil, fmt.Errorf("failed to generate CSR: %v", err)
 	}
 
-	var cred []byte
-	cred, err = na.pr.GetAgentCredential()
+	cred, err := na.pr.GetAgentCredential()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get node agent credential: %v", err)
 	}
