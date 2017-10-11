@@ -14,7 +14,7 @@
 
 SHELL := /bin/bash
 
-setup:
+setup: build
 	@bin/setup.sh
 
 build:
@@ -26,11 +26,11 @@ clean:
 test:
 	@bazel test //...
 
-lint: build
+lint: setup
 	@bin/linters.sh
 	@bin/headers.sh
 
-coverage:
+coverage: setup
 	@bin/codecov.sh
 
 racetest:
