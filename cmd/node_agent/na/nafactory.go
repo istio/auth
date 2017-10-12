@@ -44,6 +44,8 @@ func NewNodeAgent(cfg *Config) (NodeAgent, error) {
 		na.pr = &onPremPlatformImpl{cfg.CertChainFile}
 	case "gcp":
 		na.pr = &gcpPlatformImpl{&cred.GcpTokenFetcher{Aud: fmt.Sprintf("grpc://%s", cfg.IstioCAAddress)}}
+	case "aws":
+		na.pr = &awsPlatformImpl{&cred.AwsTokenFetcher{}}
 	default:
 		return nil, fmt.Errorf("Invalid env %s specified", cfg.Env)
 	}
