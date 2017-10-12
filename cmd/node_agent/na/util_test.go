@@ -24,11 +24,11 @@ const (
 	// This cert has:
 	//   NotBefore = 2017-08-23 19:00:40 +0000 UTC
 	//   NotAfter  = 2017-08-24 19:00:40 +0000 UTC
-	testCertPath = "testdata/cert-util.pem"
+	testCertFile = "testdata/cert-util.pem"
 )
 
 func TestGetWaitTime(t *testing.T) {
-	testCert, err := ioutil.ReadFile(testCertPath)
+	testCert, err := ioutil.ReadFile(testCertFile)
 	if err != nil {
 		t.Errorf("cannot read testing cert file")
 		return

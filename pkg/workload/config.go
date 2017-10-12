@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	// SECRETFILE propages the key/cert to the workload through file.
-	SECRETFILE int = iota // 0
-	// WORKLOADAPI propages the key/cert to the workload through API.
-	WORKLOADAPI // 1, unimplemented.
+	// SECRET_FILE propages the key/cert to the workload through file.
+	SECRET_FILE int = iota // 0
+	// WORKLOAD_API propages the key/cert to the workload through API.
+	WORKLOAD_API // 1, unimplemented.
 )
 
 // Config is the configuration for node agent to workload communication.
@@ -43,7 +43,7 @@ type Config struct {
 // NewSecretFileServerConfig creates a Config for propogating key/cert to workload through file.
 func NewSecretFileServerConfig(certFile string, keyFile string) Config {
 	return Config{
-		Mode:                          SECRETFILE,
+		Mode:                          SECRET_FILE,
 		FileUtil:                      util.FileUtilImpl{},
 		ServiceIdentityCertFile:       certFile,
 		ServiceIdentityPrivateKeyFile: keyFile,

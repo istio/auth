@@ -29,11 +29,11 @@ type SecretServer interface {
 // NewSecretServer instantiates a SecretServer according to the configuration.
 func NewSecretServer(cfg Config) (SecretServer, error) {
 	switch cfg.Mode {
-	case SECRETFILE:
+	case SECRET_FILE:
 		return &SecretFileServer{cfg}, nil
-	case WORKLOADAPI:
+	case WORKLOAD_API:
 		return nil, fmt.Errorf("WORKLOAD API is unimplemented")
 	default:
-		return nil, fmt.Errorf("Secret server mode is not supported: %d", cfg.Mode)
+		return nil, fmt.Errorf("mode: %d is not supported", cfg.Mode)
 	}
 }

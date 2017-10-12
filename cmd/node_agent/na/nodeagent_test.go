@@ -159,7 +159,7 @@ func TestStartWithArgs(t *testing.T) {
 		}
 		fakeWorkloadIO, _ := workload.NewSecretServer(
 			workload.Config{
-				Mode:                          workload.SECRETFILE,
+				Mode:                          workload.SECRET_FILE,
 				FileUtil:                      fakeFileUtil,
 				ServiceIdentityCertFile:       "cert_file",
 				ServiceIdentityPrivateKeyFile: "key_file",
