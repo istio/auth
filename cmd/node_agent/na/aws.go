@@ -48,7 +48,7 @@ func (na *awsPlatformImpl) IsProperPlatform() bool {
 func (na *awsPlatformImpl) GetServiceIdentity() (string, error) {
 	userdata, err := na.fetcher.GetUserData()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get service identity: %v", err)
+		return "", fmt.Errorf("Failed to get EC2 user data: %v", err)
 	}
 	var dat map[string]string
 	err = json.Unmarshal([]byte(userdata), &dat)

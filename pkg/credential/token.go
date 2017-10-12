@@ -17,6 +17,7 @@ package credential
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"cloud.google.com/go/compute/metadata"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
@@ -61,8 +62,9 @@ func (fetcher *AwsTokenFetcher) FetchToken() (string, error) {
 			bytes, _ := json.Marshal(doc)
 			return string(bytes), nil
 		}
+		return "", fmt.Errorf("Failed to get EC2 instance identity document: %v", err)
 	}
-	return "", errors.New("unable to get EC2 instance identity document")
+	return "", errors.New("Failed to connect to EC2 metadata service, please make sure this binary is running on an EC2 VM")
 }
 
 // GetUserData fetches the userdata for the current instance
