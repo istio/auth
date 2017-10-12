@@ -15,7 +15,6 @@
 package na
 
 import (
-	"errors"
 	"fmt"
 
 	cred "istio.io/auth/pkg/credential"
@@ -30,7 +29,7 @@ type NodeAgent interface {
 // NewNodeAgent is constructor for Node agent based on the provided Environment variable.
 func NewNodeAgent(cfg *Config) (NodeAgent, error) {
 	if cfg == nil {
-		return nil, errors.New("Nil configuration passed")
+		return nil, fmt.Errorf("Nil configuration passed")
 	}
 	na := &nodeAgentInternal{
 		config: cfg,

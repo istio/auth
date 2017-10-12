@@ -20,47 +20,26 @@ import (
 
 func TestGetServiceIdentity(t *testing.T) {
 	testCases := map[string]struct {
-		config      *Config
 		filename    string
 		expectedID  string
 		expectedErr string
 	}{
 		"Good cert1": {
-			config: &Config{
-				CertChainFile:  "",
-				KeyFile:        "",
-				RootCACertFile: "",
-			},
 			filename:    "testdata/cert-chain-good.pem",
 			expectedID:  "spiffe://cluster.local/ns/default/sa/default",
 			expectedErr: "",
 		},
 		"Good cert2": {
-			config: &Config{
-				CertChainFile:  "",
-				KeyFile:        "",
-				RootCACertFile: "",
-			},
 			filename:    "testdata/cert-chain-good2.pem",
 			expectedID:  "spiffe://cluster.local/ns/default/sa/default",
 			expectedErr: "",
 		},
 		"Bad cert format": {
-			config: &Config{
-				CertChainFile:  "",
-				KeyFile:        "",
-				RootCACertFile: "",
-			},
 			filename:    "testdata/cert-chain-bad1.pem",
 			expectedID:  "",
 			expectedErr: "Invalid PEM encoded certificate",
 		},
 		"Wrong file": {
-			config: &Config{
-				CertChainFile:  "",
-				KeyFile:        "",
-				RootCACertFile: "",
-			},
 			filename:    "testdata/cert-chain-bad2.pem",
 			expectedID:  "",
 			expectedErr: "open testdata/cert-chain-bad2.pem: no such file or directory",
@@ -83,7 +62,7 @@ func TestGetServiceIdentity(t *testing.T) {
 	}
 }
 
-func TestGetDialOptions2(t *testing.T) {
+func TestGetTLSCredentials(t *testing.T) {
 	testCases := map[string]struct {
 		config      *Config
 		expectedErr string
@@ -96,7 +75,7 @@ func TestGetDialOptions2(t *testing.T) {
 			},
 			expectedErr: "",
 		},
-		"Loaing failure": {
+		"Loading failure": {
 			config: &Config{
 				CertChainFile:  "testdata/cert.pem",
 				KeyFile:        "testdata/priv_not_exist.pem",
@@ -104,7 +83,7 @@ func TestGetDialOptions2(t *testing.T) {
 			},
 			expectedErr: "Cannot load key pair: open testdata/priv_not_exist.pem: no such file or directory",
 		},
-		"Loaing root cert failure": {
+		"Loading root cert failure": {
 			config: &Config{
 				CertChainFile:  "testdata/cert.pem",
 				KeyFile:        "testdata/priv.pem",
@@ -117,13 +96,7 @@ func TestGetDialOptions2(t *testing.T) {
 	for id, c := range testCases {
 		onprem := onPremPlatformImpl{""}
 
-		options, err := onprem.GetDialOptions(c.config)
-		t.Logf("%v %v %v", id, options, err)
-
-		for _, option := range options {
-			t.Logf("%v", option)
-		}
-
+		_, err := onprem.GetDialOptions(c.config)
 		if len(c.expectedErr) > 0 {
 			if err == nil {
 				t.Errorf("Succeeded. Error expected: %v", err)
