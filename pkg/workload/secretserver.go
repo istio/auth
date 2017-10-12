@@ -31,7 +31,7 @@ func NewSecretServer(cfg Config) (SecretServer, error) {
 	switch cfg.Mode {
 	case SecretFile:
 		return &SecretFileServer{cfg}, nil
-	case WorkloadApi:
+	case WorkloadAPI:
 		return nil, fmt.Errorf("WORKLOAD API is unimplemented")
 	default:
 		return nil, fmt.Errorf("mode: %d is not supported", cfg.Mode)

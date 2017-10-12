@@ -21,8 +21,8 @@ import (
 const (
 	// SecretFile propages the key/cert to the workload through file.
 	SecretFile int = iota // 0
-	// WorkloadApi propages the key/cert to the workload through API.
-	WorkloadApi // 1, unimplemented.
+	// WorkloadAPI propages the key/cert to the workload through API.
+	WorkloadAPI // 1, unimplemented.
 )
 
 // Config is the configuration for node agent to workload communication.
