@@ -40,8 +40,8 @@ type Config struct {
 	ServiceIdentityPrivateKeyFile string
 }
 
-// NewSecretFileConfig creates a Config for propogating key/cert to workload through file.
-func NewSecretFileConfig(certFile string, keyFile string) Config {
+// NewSecretFileServerConfig creates a Config for propogating key/cert to workload through file.
+func NewSecretFileServerConfig(certFile string, keyFile string) Config {
 	return Config{
 		Mode:                          SECRETFILE,
 		FileUtil:                      util.FileUtilImpl{},

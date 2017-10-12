@@ -15,12 +15,11 @@
 package util
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 )
 
-// FileUtil is the interface for utility functions on files.
+// FileUtil is the interface for utility functions operating on files.
 type FileUtil interface {
 	// Read reads the file named by filename and returns all the contents unitl EOF or an error.
 	Read(string) ([]byte, error)
@@ -34,17 +33,10 @@ type FileUtilImpl struct {
 
 // Read reads the file named by filename and returns all the contents until EOF or an error.
 func (f FileUtilImpl) Read(filename string) ([]byte, error) {
-	content, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("file read error: %v", err)
-	}
-	return content, nil
+	return ioutil.ReadFile(filename)
 }
 
 // Write writes data to a file named by filename.
 func (f FileUtilImpl) Write(filename string, content []byte, perm os.FileMode) error {
-	if err := ioutil.WriteFile(filename, content, perm); err != nil {
-		return fmt.Errorf("file write error: %v", err)
-	}
-	return nil
+	return ioutil.WriteFile(filename, content, perm)
 }

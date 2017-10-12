@@ -19,17 +19,17 @@ const (
 	certFilePermission = 0644
 )
 
-// SecretFile is an implementation of SecretServer that writes the key/cert into files.
-type SecretFile struct {
+// SecretFileServer is an implementation of SecretServer that writes the key/cert into file system.
+type SecretFileServer struct {
 	cfg Config
 }
 
-// SetServiceIdentityPrivateKey sets the service identity private key into the file.
-func (sf *SecretFile) SetServiceIdentityPrivateKey(content []byte) error {
+// SetServiceIdentityPrivateKey sets the service identity private key into the file system.
+func (sf *SecretFileServer) SetServiceIdentityPrivateKey(content []byte) error {
 	return sf.cfg.FileUtil.Write(sf.cfg.ServiceIdentityPrivateKeyFile, content, keyFilePermission)
 }
 
-// SetServiceIdentityCert sets the service identity certificate into the file.
-func (sf *SecretFile) SetServiceIdentityCert(content []byte) error {
+// SetServiceIdentityCert sets the service identity certificate into the file system.
+func (sf *SecretFileServer) SetServiceIdentityCert(content []byte) error {
 	return sf.cfg.FileUtil.Write(sf.cfg.ServiceIdentityCertFile, content, certFilePermission)
 }

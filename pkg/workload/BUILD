@@ -4,7 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "config.go",
-        "secretfile.go",
+        "secretfileserver.go",
         "secretserver.go",
     ],
     visibility = ["//visibility:public"],

@@ -51,7 +51,7 @@ func NewNodeAgent(cfg *Config) NodeAgent {
 	na.cAClient = cAClient
 
 	secretServer, err := workload.NewSecretServer(
-		workload.NewSecretFileConfig(cfg.CertChainFile, cfg.KeyFile))
+		workload.NewSecretFileServerConfig(cfg.CertChainFile, cfg.KeyFile))
 	if err != nil {
 		glog.Fatalf("Workload IO creation error: %v", err)
 	}

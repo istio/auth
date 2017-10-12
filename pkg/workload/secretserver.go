@@ -30,10 +30,10 @@ type SecretServer interface {
 func NewSecretServer(cfg Config) (SecretServer, error) {
 	switch cfg.Mode {
 	case SECRETFILE:
-		return &SecretFile{cfg}, nil
+		return &SecretFileServer{cfg}, nil
 	case WORKLOADAPI:
 		return nil, fmt.Errorf("WORKLOAD API is unimplemented")
 	default:
-		return nil, fmt.Errorf("Mode is not supported: %d", cfg.Mode)
+		return nil, fmt.Errorf("Secret server mode is not supported: %d", cfg.Mode)
 	}
 }

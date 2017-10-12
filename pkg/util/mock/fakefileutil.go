@@ -38,7 +38,6 @@ func (f FakeFileUtil) Write(filename string, content []byte, perm os.FileMode) e
 	if f.WriteContent == nil {
 		f.WriteContent = make(map[string][]byte)
 	}
-	fmt.Printf("Oliver %s:%s", filename, content)
 	f.WriteContent[filename] = content
 	return nil
 }
