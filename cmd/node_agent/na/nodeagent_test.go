@@ -15,7 +15,6 @@
 package na
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"testing"
@@ -61,23 +60,19 @@ type FakePlatformSpecificRequest struct {
 }
 
 func (f FakePlatformSpecificRequest) GetDialOptions(*Config) ([]grpc.DialOption, error) {
-	var err error
-
 	if len(f.dialOptionErr) > 0 {
-		err = errors.New(f.dialOptionErr)
+		return nil, fmt.Errorf(f.dialOptionErr)
 	}
 
-	return f.dialOption, err
+	return f.dialOption, nil
 }
 
 func (f FakePlatformSpecificRequest) GetServiceIdentity() (string, error) {
-	var err error
-
 	if len(f.identityErr) > 0 {
-		err = errors.New(f.identityErr)
+		return "", fmt.Errorf(f.identityErr)
 	}
 
-	return f.identity, err
+	return f.identity, nil
 }
 
 func (f FakePlatformSpecificRequest) IsProperPlatform() bool {
@@ -110,13 +105,11 @@ func (s *FakeIstioCAGrpcServer) SetResponseAndError(response *pb.Response, error
 }
 
 func (s *FakeIstioCAGrpcServer) HandleCSR(ctx context.Context, req *pb.Request) (*pb.Response, error) {
-	var err error
-
 	if len(s.errorMsg) > 0 {
-		err = errors.New(s.errorMsg)
+		return nil, fmt.Errorf(s.errorMsg)
 	}
 
-	return s.response, err
+	return s.response, nil
 }
 
 func TestStartWithArgs(t *testing.T) {

@@ -69,27 +69,27 @@ func TestGetTLSCredentials(t *testing.T) {
 	}{
 		"Good cert": {
 			config: &Config{
-				CertChainFile:  "testdata/cert.pem",
-				KeyFile:        "testdata/priv.pem",
-				RootCACertFile: "testdata/cert.ca.pem",
+				CertChainFile:  "testdata/cert-from-root-good.pem",
+				KeyFile:        "testdata/key-from-root-good.pem",
+				RootCACertFile: "testdata/cert-root-good.pem",
 			},
 			expectedErr: "",
 		},
 		"Loading failure": {
 			config: &Config{
-				CertChainFile:  "testdata/cert.pem",
-				KeyFile:        "testdata/priv_not_exist.pem",
-				RootCACertFile: "testdata/cert.ca.pem",
+				CertChainFile:  "testdata/cert-from-root-goo.pem",
+				KeyFile:        "testdata/key-from-root-not-exist.pem",
+				RootCACertFile: "testdata/cert-root-good.pem",
 			},
-			expectedErr: "Cannot load key pair: open testdata/priv_not_exist.pem: no such file or directory",
+			expectedErr: "Cannot load key pair: open testdata/cert-from-root-goo.pem: no such file or directory",
 		},
 		"Loading root cert failure": {
 			config: &Config{
-				CertChainFile:  "testdata/cert.pem",
-				KeyFile:        "testdata/priv.pem",
-				RootCACertFile: "testdata/cert_not_exist.ca.pem",
+				CertChainFile:  "testdata/cert-from-root-good.pem",
+				KeyFile:        "testdata/key-from-root-good.pem",
+				RootCACertFile: "testdata/cert-root-not-exist.pem",
 			},
-			expectedErr: "Failed to read CA cert: open testdata/cert_not_exist.ca.pem: no such file or directory",
+			expectedErr: "Failed to read CA cert: open testdata/cert-root-not-exist.pem: no such file or directory",
 		},
 	}
 

@@ -15,7 +15,7 @@
 package na
 
 import (
-	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -37,7 +37,7 @@ func (fetcher *mockTokenFetcher) FetchToken() (string, error) {
 	var err error
 
 	if len(fetcher.errorMessage) > 0 {
-		err = errors.New(fetcher.errorMessage)
+		err = fmt.Errorf(fetcher.errorMessage)
 	}
 
 	return token, err

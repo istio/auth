@@ -15,12 +15,7 @@
 package na
 
 import (
-	_ "errors"
-	_ "reflect"
 	"testing"
-	_ "time"
-
-	_ "google.golang.org/grpc"
 )
 
 func TestNewNodeAgent(t *testing.T) {
