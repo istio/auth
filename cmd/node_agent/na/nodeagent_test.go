@@ -221,7 +221,7 @@ func TestStartWithArgs(t *testing.T) {
 		if c.fileContent != nil && !bytes.Equal(fakeFileUtil.WriteContent["cert_file"], c.fileContent) {
 			t.Errorf("Test case [%s]: cert file content incorrect: %s vs. %s.",
 				id, fakeFileUtil.WriteContent["cert_file"], c.fileContent)
-		}		
+		}
 	}
 }
 
@@ -326,7 +326,7 @@ func TestSendCSRAgainstLocalInstance(t *testing.T) {
 			ReadContent:  make(map[string][]byte),
 			WriteContent: make(map[string][]byte),
 		}
-		
+
 		fakeWorkloadIO, _ := workload.NewSecretServer(
 			workload.Config{
 				Mode:                          workload.SecretFile,

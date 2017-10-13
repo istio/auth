@@ -45,14 +45,14 @@ func (fetcher *mockTokenFetcher) FetchToken() (string, error) {
 func TestGetDialOptions(t *testing.T) {
 	creds, err := credentials.NewClientTLSFromFile("testdata/cert-chain-good.pem", "")
 	if err != nil {
-		t.Errorf("Ubable to get credential for testdata/cert-chain-good.pem");
+		t.Errorf("Ubable to get credential for testdata/cert-chain-good.pem")
 	}
 
 	testCases := map[string]struct {
-		config         *Config
-		token          string
-		tokenFetchErr  string
-		expectedErr    string
+		config          *Config
+		token           string
+		tokenFetchErr   string
+		expectedErr     string
 		expectedOptions []grpc.DialOption
 	}{
 		"nil configuration": {
@@ -83,8 +83,8 @@ func TestGetDialOptions(t *testing.T) {
 			config: &Config{
 				RootCACertFile: "testdata/cert-chain-good.pem",
 			},
-			token:          token,
-			tokenFetchErr:  "",
+			token:         token,
+			tokenFetchErr: "",
 			expectedOptions: []grpc.DialOption{
 				grpc.WithPerRPCCredentials(&jwtAccess{token}),
 				grpc.WithTransportCredentials(creds),
@@ -112,7 +112,7 @@ func TestGetDialOptions(t *testing.T) {
 			t.Errorf("%s: Wrong dial options size. Exptcted %v, Actual %v", id, len(c.expectedOptions), len(options))
 		}
 
-		for index, option := range c.expectedOptions	{
+		for index, option := range c.expectedOptions {
 			if reflect.ValueOf(options[index]).Pointer() != reflect.ValueOf(option).Pointer() {
 				t.Errorf("%s: Wrong option found", id)
 			}

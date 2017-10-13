@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
+
 	cred "istio.io/auth/pkg/credential"
 	"istio.io/auth/pkg/workload"
 )
