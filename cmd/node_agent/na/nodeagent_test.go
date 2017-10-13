@@ -171,13 +171,6 @@ func TestStartWithArgs(t *testing.T) {
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
 		},
-		"SendCSR returns error 2": {
-			config:      &generalConfig,
-			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
-			cAClient:    &FakeCAClient{0, nil, fmt.Errorf("Error returned from CA")},
-			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
-			sendTimes:   4,
-		},
 		"SendCSR not approved": {
 			config:      &generalConfig,
 			req:         FakePlatformSpecificRequest{nil, "", "service1", "", true},
