@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -34,29 +35,30 @@ type mockTokenFetcher struct {
 
 // A mock fetcher for FetchToken.
 func (fetcher *mockTokenFetcher) FetchToken() (string, error) {
-	var err error
-
 	if len(fetcher.errorMessage) > 0 {
-		err = fmt.Errorf(fetcher.errorMessage)
+		return "", fmt.Errorf(fetcher.errorMessage)
 	}
 
-	return token, err
+	return fetcher.token, nil
 }
 
 func TestGetDialOptions(t *testing.T) {
+	creds, err := credentials.NewClientTLSFromFile("testdata/cert-chain-good.pem", "")
+	if err != nil {
+		t.Errorf("Ubable to get credential for testdata/cert-chain-good.pem");
+	}
+
 	testCases := map[string]struct {
 		config         *Config
-		optionsLen     int
 		token          string
 		tokenFetchErr  string
 		expectedErr    string
-		expectedOption uintptr
+		expectedOptions []grpc.DialOption
 	}{
 		"nil configuration": {
 			config: &Config{
 				RootCACertFile: "testdata/cert-chain-good.pem",
 			},
-			optionsLen:    0,
 			token:         "abcdef",
 			expectedErr:   "Nil configuration passed",
 			tokenFetchErr: "Nil configuration passed",
@@ -65,7 +67,6 @@ func TestGetDialOptions(t *testing.T) {
 			config: &Config{
 				RootCACertFile: "testdata/cert-chain-good.pem",
 			},
-			optionsLen:    0,
 			token:         "",
 			expectedErr:   "Nil configuration passed",
 			tokenFetchErr: "Nil configuration passed",
@@ -74,7 +75,6 @@ func TestGetDialOptions(t *testing.T) {
 			config: &Config{
 				RootCACertFile: "testdata/cert-chain-good_not_exist.pem",
 			},
-			optionsLen:    0,
 			token:         token,
 			tokenFetchErr: "",
 			expectedErr:   "open testdata/cert-chain-good_not_exist.pem: no such file or directory",
@@ -83,10 +83,12 @@ func TestGetDialOptions(t *testing.T) {
 			config: &Config{
 				RootCACertFile: "testdata/cert-chain-good.pem",
 			},
-			optionsLen:     2,
 			token:          token,
 			tokenFetchErr:  "",
-			expectedOption: reflect.ValueOf(grpc.WithPerRPCCredentials(&jwtAccess{token})).Pointer(),
+			expectedOptions: []grpc.DialOption{
+				grpc.WithPerRPCCredentials(&jwtAccess{token}),
+				grpc.WithTransportCredentials(creds),
+			},
 		},
 	}
 
@@ -96,24 +98,23 @@ func TestGetDialOptions(t *testing.T) {
 		options, err := gcp.GetDialOptions(c.config)
 		if len(c.expectedErr) > 0 {
 			if err == nil {
-				t.Errorf("Succeeded. Error expected: %v", err)
+				t.Errorf("%s: Succeeded. Error expected: %v", id, err)
 			} else if err.Error() != c.expectedErr {
 				t.Errorf("%s: incorrect error message: %s VS %s",
 					id, err.Error(), c.expectedErr)
 			}
 		} else if err != nil {
-			t.Fatalf("Unexpected Error: %v", err)
+			t.Fatalf("%s: Unexpected Error: %v", id, err)
 		}
 
 		// Make sure there're two dial options, one for TLS and one for JWT.
-		if len(options) != c.optionsLen {
-			t.Errorf("Wrong dial options size. Exptcted %v, Actual %v", c.optionsLen, len(options))
+		if len(options) != len(c.expectedOptions) {
+			t.Errorf("%s: Wrong dial options size. Exptcted %v, Actual %v", id, len(c.expectedOptions), len(options))
 		}
 
-		if len(options) > 0 {
-			expectedOption := grpc.WithPerRPCCredentials(&jwtAccess{token})
-			if reflect.ValueOf(options[0]).Pointer() != reflect.ValueOf(expectedOption).Pointer() {
-				t.Errorf("Wrong option found")
+		for index, option := range c.expectedOptions	{
+			if reflect.ValueOf(options[index]).Pointer() != reflect.ValueOf(option).Pointer() {
+				t.Errorf("%s: Wrong option found", id)
 			}
 		}
 	}

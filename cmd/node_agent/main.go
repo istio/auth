@@ -64,12 +64,13 @@ func main() {
 func runNodeAgent() {
 	nodeAgent, err := na.NewNodeAgent(&naConfig)
 	if err != nil {
-		glog.Fatal(err.Error())
-		os.Exit(1)
+		glog.Error(err)
+		os.Exit(-1)
 	}
 
 	glog.Infof("Starting Node Agent")
 	if err := nodeAgent.Start(); err != nil {
 		glog.Errorf("Node agent terminated with error: %v.", err)
+		os.Exit(-1)
 	}
 }

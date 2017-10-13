@@ -78,7 +78,7 @@ func TestGetTLSCredentials(t *testing.T) {
 		"Loading failure": {
 			config: &Config{
 				CertChainFile:  "testdata/cert-from-root-goo.pem",
-				KeyFile:        "testdata/key-from-root-not-exist.pem",
+				KeyFile:        "testdata/cert-from-root-not-exist.pem",
 				RootCACertFile: "testdata/cert-root-good.pem",
 			},
 			expectedErr: "Cannot load key pair: open testdata/cert-from-root-goo.pem: no such file or directory",

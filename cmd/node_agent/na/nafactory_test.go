@@ -49,18 +49,17 @@ func TestNewNodeAgent(t *testing.T) {
 	}
 
 	for id, c := range testCases {
-		agent, err := NewNodeAgent(c.config)
-		t.Logf("%v %v", agent, err)
+		_, err := NewNodeAgent(c.config)
 
 		if len(c.expectedErr) > 0 {
 			if err == nil {
-				t.Errorf("Succeeded. Error expected: %v", err)
+				t.Errorf("%s: Succeeded. Error expected: %v", id, err)
 			} else if err.Error() != c.expectedErr {
 				t.Errorf("%s: incorrect error message: %s VS %s",
 					id, err.Error(), c.expectedErr)
 			}
 		} else if err != nil {
-			t.Errorf("Unexpected Error: %v", err)
+			t.Errorf("%s: Unexpected Error: %v", id, err)
 		}
 
 	}
