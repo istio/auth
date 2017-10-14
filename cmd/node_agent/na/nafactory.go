@@ -18,7 +18,9 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
+
 	cred "istio.io/auth/pkg/credential"
+	"istio.io/auth/pkg/workload"
 )
 
 // NodeAgent interface that should be implemented by
@@ -28,12 +30,13 @@ type NodeAgent interface {
 }
 
 // NewNodeAgent is constructor for Node agent based on the provided Environment variable.
-func NewNodeAgent(cfg *Config) NodeAgent {
+func NewNodeAgent(cfg *Config) (NodeAgent, error) {
 	if cfg == nil {
-		glog.Fatalf("Nil configuration passed")
+		return nil, fmt.Errorf("Nil configuration passed")
 	}
 	na := &nodeAgentInternal{
-		config: cfg,
+		config:   cfg,
+		certUtil: CertUtilImpl{},
 	}
 
 	switch cfg.Env {
@@ -42,10 +45,17 @@ func NewNodeAgent(cfg *Config) NodeAgent {
 	case "gcp":
 		na.pr = &gcpPlatformImpl{&cred.GcpTokenFetcher{Aud: fmt.Sprintf("grpc://%s", cfg.IstioCAAddress)}}
 	default:
-		glog.Fatalf("Invalid env %s specified", cfg.Env)
+		return nil, fmt.Errorf("Invalid env %s specified", cfg.Env)
 	}
 
 	cAClient := &cAGrpcClientImpl{}
 	na.cAClient = cAClient
-	return na
+
+	secretServer, err := workload.NewSecretServer(
+		workload.NewSecretFileServerConfig(cfg.CertChainFile, cfg.KeyFile))
+	if err != nil {
+		glog.Fatalf("Workload IO creation error: %v", err)
+	}
+	na.secretServer = secretServer
+	return na, nil
 }
