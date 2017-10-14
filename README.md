@@ -11,7 +11,7 @@ communication without requiring service code changes. It is responsible for:
   enable interoperability across clusters and clouds.
 - Securing the service to service communication.
 - Providing a key management system to automate key/cert generation,
-  distribution, rotation, and revocation.
+  distribution, rotation, and revocation
 - Upcoming features:
   - End-user to service communication.
   - Fine-grained authorization and auditing to control and monitor who accesses
