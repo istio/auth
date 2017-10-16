@@ -35,6 +35,8 @@ type platformSpecificRequest interface {
 	GetServiceIdentity() (string, error)
 	// Get node agent credential
 	GetAgentCredential() ([]byte, error)
+	// Get type of the credential
+	GetCredentialType() string
 }
 
 // CAGrpcClient is for implementing the GRPC client to talk to CA.
@@ -179,5 +181,6 @@ func (na *nodeAgentInternal) createRequest() ([]byte, *pb.Request, error) {
 	return privKey, &pb.Request{
 		CsrPem:              csr,
 		NodeAgentCredential: cred,
+		CredentialType:      na.pr.GetCredentialType(),
 	}, nil
 }
