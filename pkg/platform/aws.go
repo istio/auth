@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package na
+package platform
 
 import (
 	"encoding/json"
@@ -23,11 +23,13 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type awsPlatformImpl struct {
+// AwsClientImpl is the implementation of AWS metadata client.
+type AwsClientImpl struct {
 	client *ec2metadata.EC2Metadata
 }
 
-func (na *awsPlatformImpl) GetDialOptions(cfg *Config) ([]grpc.DialOption, error) {
+// GetDialOptions returns the GRPC dial options to connect to the CA.
+func (pi *AwsClientImpl) GetDialOptions(cfg *ClientConfig) ([]grpc.DialOption, error) {
 	creds, err := credentials.NewClientTLSFromFile(cfg.RootCACertFile, "")
 	if err != nil {
 		return nil, err
@@ -37,20 +39,21 @@ func (na *awsPlatformImpl) GetDialOptions(cfg *Config) ([]grpc.DialOption, error
 	return options, nil
 }
 
-func (na *awsPlatformImpl) IsProperPlatform() bool {
-	return na.client.Available()
+// IsPropoerPlatform returns whether the AWS platform client is available.
+func (pi *AwsClientImpl) IsProperPlatform() bool {
+	return pi.client.Available()
 }
 
-// Extract service identity from userdata. This function should be
+// GetServiceIdentity extracts service identity from userdata. This function should be
 // pluggable for different AWS deployments in the future.
-func (na *awsPlatformImpl) GetServiceIdentity() (string, error) {
+func (pi *AwsClientImpl) GetServiceIdentity() (string, error) {
 	return "", nil
 }
 
 // GetAgentCredential retrieves the instance identity document as the
 // agent credential used by node agent
-func (na *awsPlatformImpl) GetAgentCredential() ([]byte, error) {
-	doc, err := na.client.GetInstanceIdentityDocument()
+func (pi *AwsClientImpl) GetAgentCredential() ([]byte, error) {
+	doc, err := pi.client.GetInstanceIdentityDocument()
 	if err != nil {
 		return []byte{}, fmt.Errorf("Failed to get EC2 instance identity document: %v", err)
 	}
@@ -63,6 +66,7 @@ func (na *awsPlatformImpl) GetAgentCredential() ([]byte, error) {
 	return bytes, nil
 }
 
-func (na *awsPlatformImpl) GetCredentialType() string {
+// GetCredentialType returns the credential type as "aws".
+func (pi *AwsClientImpl) GetCredentialType() string {
 	return "aws"
 }
