@@ -39,7 +39,7 @@ func (pi *AwsClientImpl) GetDialOptions(cfg *ClientConfig) ([]grpc.DialOption, e
 	return options, nil
 }
 
-// IsPropoerPlatform returns whether the AWS platform client is available.
+// IsProperPlatform returns whether the AWS platform client is available.
 func (pi *AwsClientImpl) IsProperPlatform() bool {
 	return pi.client.Available()
 }
