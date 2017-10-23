@@ -76,27 +76,27 @@ func (na *awsPlatformImpl) GetServiceIdentity() (string, error) {
 func (na *awsPlatformImpl) GetInstanceIdentityDocument() ([]byte, error) {
 	cert, err := pki.ParsePemEncodedCertificate([]byte(AWSCertificatePem))
 	if err != nil {
-		return []byte{}, fmt.Errorf("Failed to parse AWS public certificate: %v", err)
+		return nil, fmt.Errorf("Failed to parse AWS public certificate: %v", err)
 	}
 
 	resp, err := na.client.GetDynamicData("instance-identity/pkcs7")
 	if err != nil {
-		return []byte{}, fmt.Errorf("Failed to get EC2 instance PKCS7 signature: %v", err)
+		return nil, fmt.Errorf("Failed to get EC2 instance PKCS7 signature: %v", err)
 	}
 
 	dec, err := base64.StdEncoding.DecodeString(resp)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Failed to decode PKCS7 signature: %v", err)
+		return nil, fmt.Errorf("Failed to decode PKCS7 signature: %v", err)
 	}
 
 	parsed, err := pkcs7.Parse(dec)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Failed to parse PKCS7 response: %v", err)
+		return nil, fmt.Errorf("Failed to parse PKCS7 response: %v", err)
 	}
 
 	parsed.Certificates = []*x509.Certificate{cert}
 	if err := parsed.Verify(); err != nil {
-		return []byte{}, fmt.Errorf("Failed to verify PKCS7 signature: %v", err)
+		return nil, fmt.Errorf("Failed to verify PKCS7 signature: %v", err)
 	}
 
 	return parsed.Content, nil
@@ -107,12 +107,12 @@ func (na *awsPlatformImpl) GetInstanceIdentityDocument() ([]byte, error) {
 func (na *awsPlatformImpl) GetAgentCredential() ([]byte, error) {
 	doc, err := na.GetInstanceIdentityDocument()
 	if err != nil {
-		return []byte{}, fmt.Errorf("Failed to get EC2 instance identity document: %v", err)
+		return nil, fmt.Errorf("Failed to get EC2 instance identity document: %v", err)
 	}
 
 	bytes, err := json.Marshal(doc)
 	if err != nil {
-		return []byte{}, fmt.Errorf("Failed to marshal identity document %v: %v", doc, err)
+		return nil, fmt.Errorf("Failed to marshal identity document %v: %v", doc, err)
 	}
 
 	return bytes, nil
