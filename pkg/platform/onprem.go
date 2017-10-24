@@ -31,6 +31,11 @@ type OnPremClientImpl struct {
 	certFile string
 }
 
+// NewOnPremClientImpl creates a new OnPremClientImpl.
+func NewOnPremClientImpl(certChainFile string) *OnPremClientImpl {
+	return &OnPremClientImpl{certChainFile}
+}
+
 // GetDialOptions returns the GRPC dial options to connect to the CA.
 func (ci *OnPremClientImpl) GetDialOptions(cfg *ClientConfig) ([]grpc.DialOption, error) {
 	transportCreds, err := getTLSCredentials(cfg.CertChainFile, cfg.KeyFile, cfg.RootCACertFile)

@@ -17,11 +17,7 @@ package platform
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
-
 	"google.golang.org/grpc"
-	cred "istio.io/auth/pkg/credential"
 )
 
 // ClientConfig consists of the platform client configuration.
@@ -52,11 +48,11 @@ type Client interface {
 func NewClient(platform string, config ClientConfig, caAddr string) (Client, error) {
 	switch platform {
 	case "onprem":
-		return &OnPremClientImpl{config.CertChainFile}, nil
+		return NewOnPremClientImpl(config.CertChainFile), nil
 	case "gcp":
-		return &GcpClientImpl{&cred.GcpTokenFetcher{Aud: fmt.Sprintf("grpc://%s", caAddr)}}, nil
+		return NewGcpClientImpl(caAddr), nil
 	case "aws":
-		return &AwsClientImpl{ec2metadata.New(session.Must(session.NewSession()))}, nil
+		return NewAwsClientImpl(), nil
 	default:
 		return nil, fmt.Errorf("Invalid env %s specified", platform)
 	}

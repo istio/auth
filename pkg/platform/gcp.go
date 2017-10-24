@@ -50,6 +50,11 @@ type GcpClientImpl struct {
 	fetcher cred.TokenFetcher
 }
 
+// NewGcpClientImpl creates a new GcpClientImpl.
+func NewGcpClientImpl(caAddr string) *GcpClientImpl {
+	return &GcpClientImpl{&cred.GcpTokenFetcher{Aud: fmt.Sprintf("grpc://%s", caAddr)}}
+}
+
 // IsProperPlatform returns whether the client is on GCE.
 func (ci *GcpClientImpl) IsProperPlatform() bool {
 	return metadata.OnGCE()

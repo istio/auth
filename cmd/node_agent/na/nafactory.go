@@ -48,6 +48,7 @@ func NewNodeAgent(cfg *Config) (NodeAgent, error) {
 	cAClient := &cAGrpcClientImpl{}
 	na.cAClient = cAClient
 
+	// TODO: Specify files for service identity cert/key instead of node agent files.
 	secretServer, err := workload.NewSecretServer(
 		workload.NewSecretFileServerConfig(cfg.PlatformConfig.CertChainFile, cfg.PlatformConfig.KeyFile))
 	if err != nil {
