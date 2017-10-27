@@ -47,12 +47,16 @@ func (j *jwtAccess) RequireTransportSecurity() bool {
 
 // GcpClientImpl is the implementation of GCP metadata client.
 type GcpClientImpl struct {
+	cfg     *GcpClientConfig
 	fetcher cred.TokenFetcher
 }
 
 // NewGcpClientImpl creates a new GcpClientImpl.
-func NewGcpClientImpl(caAddr string) *GcpClientImpl {
-	return &GcpClientImpl{&cred.GcpTokenFetcher{Aud: fmt.Sprintf("grpc://%s", caAddr)}}
+func NewGcpClientImpl(c ClientConfig, caAddr string) *GcpClientImpl {
+	return &GcpClientImpl{
+		cfg:     c.(*GcpClientConfig),
+		fetcher: &cred.GcpTokenFetcher{Aud: fmt.Sprintf("grpc://%s", caAddr)},
+	}
 }
 
 // IsProperPlatform returns whether the client is on GCE.
@@ -61,14 +65,14 @@ func (ci *GcpClientImpl) IsProperPlatform() bool {
 }
 
 // GetDialOptions returns the GRPC dial options to connect to the CA.
-func (ci *GcpClientImpl) GetDialOptions(cfg *ClientConfig) ([]grpc.DialOption, error) {
+func (ci *GcpClientImpl) GetDialOptions() ([]grpc.DialOption, error) {
 	jwtKey, err := ci.fetcher.FetchToken()
 	if err != nil {
 		glog.Errorf("Failed to get instance from GCE metadata %s, please make sure this binary is running on a GCE VM", err)
 		return nil, err
 	}
 
-	creds, err := credentials.NewClientTLSFromFile(cfg.RootCACertFile, "")
+	creds, err := credentials.NewClientTLSFromFile(ci.cfg.RootCACertFile, "")
 	if err != nil {
 		return nil, err
 	}

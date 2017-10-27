@@ -7,8 +7,10 @@ go_library(
     deps = [
         "//cmd/node_agent/na:go_default_library",
         "//pkg/cmd:go_default_library",
+        "//pkg/platform:go_default_library",
         "@com_github_golang_glog//:go_default_library",
         "@com_github_spf13_cobra//:go_default_library",
+        "@com_github_spf13_pflag//:go_default_library",
     ],
 )
 

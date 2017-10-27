@@ -7,6 +7,9 @@ go_library(
         "client.go",
         "gcp.go",
         "onprem.go",
+        "aws_config.go",
+        "gcp_config.go",
+        "onprem_config.go",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -20,6 +23,7 @@ go_library(
         "@com_github_aws_aws-sdk-go//aws/ec2metadata:go_default_library",
         "@com_github_aws_aws-sdk-go//aws/session:go_default_library",
         "@com_github_fullsailor_pkcs7//:go_default_library",
+        "@com_github_spf13_pflag//:go_default_library",
     ],
 )
 
@@ -28,6 +32,7 @@ go_test(
     size = "small",
     srcs = [
         "aws_test.go",
+        "aws_config_test.go",
         "gcp_test.go",
         "onprem_test.go",
     ],
