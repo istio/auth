@@ -18,13 +18,13 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-// GcpClientConfig ...
+// GcpClientConfig contains configs for gcp client
 type GcpClientConfig struct {
 	// Root CA cert file to validate the gRPC service in CA.
 	RootCACertFile string
 }
 
-// GetFlagSet ...
+// GetFlagSet returns flag set for gcp client
 func (c *GcpClientConfig) GetFlagSet() *flag.FlagSet {
 	flags := flag.NewFlagSet("aws", flag.ContinueOnError)
 	flags.StringVar(&c.RootCACertFile, "root-cert",

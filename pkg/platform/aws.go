@@ -133,7 +133,7 @@ func (ci *AwsClientImpl) GetAgentCredential() ([]byte, error) {
 	return bytes, nil
 }
 
-// GetCredentialType returns the credential type as "aws".
+// GetCredentialType returns the credential type as "AWS".
 func (ci *AwsClientImpl) GetCredentialType() string {
-	return "aws"
+	return "AWS"
 }

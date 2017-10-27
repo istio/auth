@@ -18,7 +18,7 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-// OnPremClientConfig ...
+// OnPremClientConfig contains configs for onprem client
 type OnPremClientConfig struct {
 	// Root CA cert file to validate the gRPC service in CA.
 	RootCACertFile string
@@ -28,7 +28,7 @@ type OnPremClientConfig struct {
 	CertChainFile string
 }
 
-// GetFlagSet ...
+// GetFlagSet returns flag set for onprem client
 func (c *OnPremClientConfig) GetFlagSet() *flag.FlagSet {
 	flags := flag.NewFlagSet("onprem", flag.ContinueOnError)
 	flags.StringVar(&c.CertChainFile, "cert-chain",

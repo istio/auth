@@ -55,10 +55,10 @@ type Config struct {
 	// The Configuration for talking to the platform metadata server.
 	PlatformConfig platform.ClientConfig
 
-	// ServiceCertChainFile ...
+	// File path for service identity certificate
 	ServiceCertFile string
 
-	// ServiceKeyFile ...
+	// File path for service identity private key
 	ServiceKeyFile string
 }
 
