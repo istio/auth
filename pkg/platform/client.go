@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// ClientConfig is the interface for custom configs
+// ClientConfig is the interface for platform configs
 type ClientConfig interface {
 	GetFlagSet() *flag.FlagSet
 }

@@ -101,7 +101,7 @@ func TestGetDialOptions(t *testing.T) {
 		options, err := gcp.GetDialOptions()
 		if len(c.expectedErr) > 0 {
 			if err == nil {
-				t.Errorf("%s: Succeeded. Error expected: %v", id, err)
+				t.Errorf("%s: Succeeded. Error expected: %v", id, c.expectedErr)
 			} else if err.Error() != c.expectedErr {
 				t.Errorf("%s: incorrect error message: %s VS %s",
 					id, err.Error(), c.expectedErr)

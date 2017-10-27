@@ -20,8 +20,8 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
-
 	flag "github.com/spf13/pflag"
+
 	"istio.io/auth/cmd/node_agent/na"
 	"istio.io/auth/pkg/cmd"
 	"istio.io/auth/pkg/platform"

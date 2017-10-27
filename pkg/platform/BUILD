@@ -35,6 +35,7 @@ go_test(
         "aws_config_test.go",
         "gcp_test.go",
         "onprem_test.go",
+        "client_test.go",
     ],
     data = glob(["testdata/*"]),
     library = ":go_default_library",
