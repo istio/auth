@@ -11,8 +11,3 @@ vendor
 # Ignore generated protobuf
 *.pb.go
 
-# Ignore key files for e2e test
-docker/istio_ca.crt
-docker/istio_ca.key
-docker/node_agent.crt
-docker/node_agent.key
