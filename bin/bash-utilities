@@ -1,0 +1,203 @@
+#!/bin/bash
+#
+# Copyright (C) Extensible Service Proxy Authors
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+################################################################################
+#
+
+# Library of useful utilities.
+function set_gcloud() {
+  export GCLOUD="$(which gcloud)" || export GCLOUD='/usr/lib/google-cloud-sdk/bin/gcloud'
+  export GSUTIL=$(which gsutil) || export GSUTIL='/usr/lib/google-cloud-sdk/bin/gsutil'
+}
+
+function set_bazel() {
+  export BAZEL="$(which bazel)" || export BAZEL='/usr/local/bin/bazel'
+}
+
+function set_kubectl() {
+  export KUBECTL="$(which kubectl)" || export WRK='/usr/local/google/home/jaebong/google-cloud-sdk/bin/kubectl'
+}
+
+set_bazel
+set_gcloud
+set_kubectl
+
+# Echo and un command, exit on failure
+function run_nonfatal() {
+  echo ""
+  echo "[$(date)] $@"
+  "${@}"
+  local status=${?}
+  if [[ "${status}" != "0" ]]; then
+    echo "Command failed with exit status ${status}: ${@}" >&2
+  fi
+  return ${status}
+}
+
+# Echo and run a shell command, exit on failure
+function run() {
+  run_nonfatal "${@}" || error_exit "command failed"
+}
+
+# Exit with a message and an exit code.
+# Arguments:
+#   $1 - string with an error message
+#   $2 - exit code, defaults to 1
+function error_exit() {
+  # ${BASH_SOURCE[1]} is the file name of the caller.
+  echo "${BASH_SOURCE[1]}: line ${BASH_LINENO[0]}: ${1:-Unknown Error.} (exit ${2:-1})" 1>&2
+  exit ${2:-1}
+}
+
+# Retries a command with an exponential back-off.
+# The back-off base is a constant 3/2
+# Options:
+#   -n Maximum total attempts (0 for infinite, default 10)
+#   -t Maximum time to sleep between retries (default 60)
+#   -s Initial time to sleep between retries. Subsequent retries
+#      subject to exponential back-off up-to the maximum time.
+#      (default 5)
+function retry() {
+  local OPTIND OPTARG ARG
+  local COUNT=10
+  local SLEEP=5 MAX_SLEEP=60
+  local MUL=3 DIV=2 # Exponent base multiplier and divisor
+                    # (Bash doesn't do floats)
+
+  while getopts ":n:s:t:" ARG; do
+    case ${ARG} in
+      n) COUNT=${OPTARG};;
+      s) SLEEP=${OPTARG};;
+      t) MAX_SLEEP=${OPTARG};;
+      *) echo "Unrecognized argument: -${OPTARG}";;
+    esac
+  done
+
+  shift $((OPTIND-1))
+
+  # If there is no command, abort early.
+  [[ ${#} -le 0 ]] && { echo "No command specified, aborting."; return 1; }
+
+  local N=1 S=${SLEEP}  # S is the current length of sleep.
+  while : ; do
+    echo "${N}. Executing ${@}"
+    "${@}" && { echo "Command succeeded."; return 0; }
+
+    [[ (( COUNT -le 0 || N -lt COUNT )) ]] \
+      || { echo "Command '${@}' failed ${N} times, aborting."; return 1; }
+
+    if [[ (( S -lt MAX_SLEEP )) ]] ; then
+      # Must always count full exponent due to integer rounding.
+      ((S=SLEEP * (MUL ** (N-1)) / (DIV ** (N-1))))
+    fi
+
+    ((S=(S < MAX_SLEEP) ? S : MAX_SLEEP))
+
+    echo "Command failed. Will retry in ${S} seconds."
+    sleep ${S}
+
+    ((N++))
+  done
+}
+
+function get_service_external_ip_address() {
+  local service="${1}"
+  local namespace="${2}"
+
+  local ip_address=`${KUBECTL} get service ${service} -n ${namespace} | grep '^istio-ca' | awk '{ print $4}'`
+  if [ "$ip_address" == "<pending>" ]; then
+    echo "External IP address is still pending..."
+    return 1
+  fi  
+
+  EXTERNAL_IP_ADDRESS=$ip_address
+  return 0
+}
+
+function check_service_internal_ip_ready() {
+  local service="${1}"
+  local namespace="${2}"
+
+  local ip_address=`${KUBECTL} get service ${service} -n ${namespace} | grep "^${service}" | awk '{ print $3}'`
+  if [ "$ip_address" == "" ]; then
+    echo "Internal IP address of the service is not ready yet..."
+    return 1
+  fi  
+
+  return 0
+}
+
+function check_secret() {
+  local secrets="${1}"
+  local namespace="${2}"
+
+  local ip_address=`${KUBECTL} get secrets "${secrets}" -n "${namespace}" | grep "^${secrets}" | awk '{ print $3}'`
+  if [ "$ip_address" != "3" ]; then
+    echo "Secrets ${secrets} was not created yet..."
+    return 1
+  fi  
+  return 0
+}
+
+function wait_certificate_update_and_verify() {
+  local original_cert_file="${1}"
+  local original_key_file="${2}"
+  local root_cert_file="${3}"
+  local namespace="${4}"
+  local pod_name=`${KUBECTL} get pods -n ${namespace} | grep '^node-agent' | awk '{ print $1 }'`
+  local node_agent_crt_file_name="$(mktemp /tmp/node_agent.XXXX.crt)"
+  local node_agent_key_file_name="$(mktemp /tmp/node_agent.XXXX.key)"
+
+  # Copy cert and key from NodeAgent instance
+  ${KUBECTL} cp "${pod_name}":usr/local/bin/node_agent.crt ${node_agent_crt_file_name} -n ${namespace}
+  ${KUBECTL} cp "${pod_name}":usr/local/bin/node_agent.key ${node_agent_key_file_name} -n ${namespace}
+    
+  # Compare downloaded cert and key files with original cert and key
+  cmp ${node_agent_crt_file_name} ${original_cert_file}
+  local cert_updated=$?
+
+  cmp ${node_agent_key_file_name} ${original_key_file}
+  local key_updated=$?
+
+  status=0
+  if [ cert_updated == 0 ] || [ key_updated == 0 ]; then
+    # Not updated yet
+    status=1
+  else
+    # Updated. Verify cert and key with root certificate
+    openssl verify -verbose -x509_strict -CAfile ${root_cert_file} -CApath nosuchdir ${node_agent_crt_file_name}
+    status=${?}
+  fi 
+
+  rm ${node_agent_crt_file_name}
+  rm ${node_agent_key_file_name}
+
+  return $status
+}  
+
+
+
+
