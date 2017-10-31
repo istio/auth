@@ -10,3 +10,4 @@ vendor
 
 # Ignore generated protobuf
 *.pb.go
+

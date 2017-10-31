@@ -66,6 +66,7 @@ bin/push-debian.sh -c opt -p "gs://istio-artifacts/auth/${GIT_SHA}/artifacts/deb
 
 echo "=== Running e2e Tests ==="
 bin/e2e.sh --tag ${GIT_SHA} --hub 'gcr.io/istio-testing'
+bin/e2e-na.sh --tag ${GIT_SHA} --hub 'gcr.io/istio-testing'
 
 if [ "${CI:-}" == 'bootstrap' ]; then
     echo "=== Building githubctl ==="
