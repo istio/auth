@@ -15,13 +15,16 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"istio.io/auth/cmd/node_agent/na"
 	"istio.io/auth/pkg/cmd"
+	"istio.io/auth/pkg/platform"
 )
 
 var (
@@ -29,7 +32,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
-			runNodeAgent()
+			runNodeAgent(cmd.Flags())
 		},
 	}
 )
@@ -38,18 +41,15 @@ func init() {
 	na.InitializeConfig(&naConfig)
 
 	flags := rootCmd.Flags()
+	flags.SetOutput(ioutil.Discard) // suppress warnings output during flag parsing
 
 	flags.StringVar(&naConfig.ServiceIdentityOrg, "org", "", "Organization for the cert")
 	flags.IntVar(&naConfig.RSAKeySize, "key-size", 1024, "Size of generated private key")
 	flags.StringVar(&naConfig.IstioCAAddress,
 		"ca-address", "istio-ca:8060", "Istio CA address")
-	flags.StringVar(&naConfig.Env, "env", "onprem", "Node Environment : onprem | gcp | aws")
-	flags.StringVar(&naConfig.PlatformConfig.CertChainFile, "cert-chain",
-		"/etc/certs/cert-chain.pem", "Node Agent identity cert file")
-	flags.StringVar(&naConfig.PlatformConfig.KeyFile,
-		"key", "/etc/certs/key.pem", "Node identity private key file")
-	flags.StringVar(&naConfig.PlatformConfig.RootCACertFile, "root-cert",
-		"/etc/certs/root-cert.pem", "Root Certificate file")
+	flags.StringVar(&naConfig.Env, "env", "onprem", "Node Environment : onprem | gcp | aws | ...")
+	flags.StringVar(&naConfig.ServiceCertFile, "service-cert", "/etc/cert.pem", "Service account certificate location")
+	flags.StringVar(&naConfig.ServiceKeyFile, "service-priv-key", "/etc/key.pem", "Service account private key location")
 
 	cmd.InitializeFlags(rootCmd)
 }
@@ -61,7 +61,23 @@ func main() {
 	}
 }
 
-func runNodeAgent() {
+func runNodeAgent(flags *flag.FlagSet) {
+	cc, err := platform.NewClientConfig(naConfig.Env)
+	if err != nil {
+		glog.Error(err)
+		os.Exit(-1)
+	}
+
+	// parse custom flags
+	cFlags := cc.GetFlagSet()
+	cFlags.AddFlagSet(flags)
+	err = cFlags.Parse(os.Args[1:])
+	if err != nil {
+		glog.Error(err)
+		os.Exit(-1)
+	}
+
+	naConfig.PlatformConfig = cc
 	nodeAgent, err := na.NewNodeAgent(&naConfig)
 	if err != nil {
 		glog.Error(err)

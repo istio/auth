@@ -16,6 +16,8 @@ package na
 
 import (
 	"testing"
+
+	"istio.io/auth/pkg/platform"
 )
 
 func TestNewNodeAgent(t *testing.T) {
@@ -30,13 +32,15 @@ func TestNewNodeAgent(t *testing.T) {
 		},
 		"onprem env test": {
 			config: &Config{
-				Env: "onprem",
+				Env:            "onprem",
+				PlatformConfig: &platform.OnPremClientConfig{},
 			},
 			expectedErr: "",
 		},
 		"gcp env test": {
 			config: &Config{
-				Env: "gcp",
+				Env:            "gcp",
+				PlatformConfig: &platform.GcpClientConfig{},
 			},
 			expectedErr: "",
 		},

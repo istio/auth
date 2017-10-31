@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
-
 	"istio.io/auth/pkg/platform"
 	"istio.io/auth/pkg/workload"
 )
@@ -39,18 +38,16 @@ func NewNodeAgent(cfg *Config) (NodeAgent, error) {
 		certUtil: CertUtilImpl{},
 	}
 
-	if pc, err := platform.NewClient(cfg.Env, cfg.PlatformConfig, cfg.IstioCAAddress); err == nil {
-		na.pc = pc
-	} else {
+	pc, err := platform.NewClient(cfg.Env, cfg.PlatformConfig, cfg.IstioCAAddress)
+	if err != nil {
 		return nil, err
 	}
+	na.pc = pc
 
-	cAClient := &cAGrpcClientImpl{}
-	na.cAClient = cAClient
+	na.cAClient = &cAGrpcClientImpl{}
 
-	// TODO: Specify files for service identity cert/key instead of node agent files.
 	secretServer, err := workload.NewSecretServer(
-		workload.NewSecretFileServerConfig(cfg.PlatformConfig.CertChainFile, cfg.PlatformConfig.KeyFile))
+		workload.NewSecretFileServerConfig(cfg.ServiceCertFile, cfg.ServiceKeyFile))
 	if err != nil {
 		glog.Fatalf("Workload IO creation error: %v", err)
 	}

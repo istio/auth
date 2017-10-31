@@ -28,17 +28,17 @@ import (
 
 // OnPremClientImpl is the implementation of on premise metadata client.
 type OnPremClientImpl struct {
-	certFile string
+	cfg *OnPremClientConfig
 }
 
 // NewOnPremClientImpl creates a new OnPremClientImpl.
-func NewOnPremClientImpl(certChainFile string) *OnPremClientImpl {
-	return &OnPremClientImpl{certChainFile}
+func NewOnPremClientImpl(c ClientConfig) *OnPremClientImpl {
+	return &OnPremClientImpl{cfg: c.(*OnPremClientConfig)}
 }
 
 // GetDialOptions returns the GRPC dial options to connect to the CA.
-func (ci *OnPremClientImpl) GetDialOptions(cfg *ClientConfig) ([]grpc.DialOption, error) {
-	transportCreds, err := getTLSCredentials(cfg.CertChainFile, cfg.KeyFile, cfg.RootCACertFile)
+func (ci *OnPremClientImpl) GetDialOptions() ([]grpc.DialOption, error) {
+	transportCreds, err := getTLSCredentials(ci.cfg.CertChainFile, ci.cfg.KeyFile, ci.cfg.RootCACertFile)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (ci *OnPremClientImpl) IsProperPlatform() bool {
 
 // GetServiceIdentity gets the service account from the cert SAN field.
 func (ci *OnPremClientImpl) GetServiceIdentity() (string, error) {
-	certBytes, err := ioutil.ReadFile(ci.certFile)
+	certBytes, err := ioutil.ReadFile(ci.cfg.CertChainFile)
 	if err != nil {
 		return "", err
 	}
@@ -72,16 +72,16 @@ func (ci *OnPremClientImpl) GetServiceIdentity() (string, error) {
 
 // GetAgentCredential passes the certificate to control plane to authenticate
 func (ci *OnPremClientImpl) GetAgentCredential() ([]byte, error) {
-	certBytes, err := ioutil.ReadFile(ci.certFile)
+	certBytes, err := ioutil.ReadFile(ci.cfg.CertChainFile)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read cert file: %s", ci.certFile)
+		return nil, fmt.Errorf("Failed to read cert file: %s", ci.cfg.CertChainFile)
 	}
 	return certBytes, nil
 }
 
-// GetCredentialType returns "onprem".
+// GetCredentialType returns "ONPREM".
 func (ci *OnPremClientImpl) GetCredentialType() string {
-	return "onprem"
+	return "ONPREM"
 }
 
 // getTLSCredentials creates transport credentials that are common to

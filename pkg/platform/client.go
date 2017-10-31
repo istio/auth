@@ -17,22 +17,18 @@ package platform
 import (
 	"fmt"
 
+	flag "github.com/spf13/pflag"
 	"google.golang.org/grpc"
 )
 
-// ClientConfig consists of the platform client configuration.
-type ClientConfig struct {
-	// Root CA cert file to validate the gRPC service in CA.
-	RootCACertFile string
-	// The private key file
-	KeyFile string
-	// The cert chain file
-	CertChainFile string
+// ClientConfig is the interface for platform configs
+type ClientConfig interface {
+	GetFlagSet() *flag.FlagSet
 }
 
 // Client is the interface for implementing the client to access platform metadata.
 type Client interface {
-	GetDialOptions(*ClientConfig) ([]grpc.DialOption, error)
+	GetDialOptions() ([]grpc.DialOption, error)
 	// Whether the node agent is running on the right platform, e.g., if gcpPlatformImpl should only
 	// run on GCE.
 	IsProperPlatform() bool
@@ -44,15 +40,29 @@ type Client interface {
 	GetCredentialType() string
 }
 
-// NewClient is the function to create implementations of the platform metadata client.
-func NewClient(platform string, config ClientConfig, caAddr string) (Client, error) {
+// NewClientConfig returns the platform config object
+func NewClientConfig(platform string) (ClientConfig, error) {
 	switch platform {
 	case "onprem":
-		return NewOnPremClientImpl(config.CertChainFile), nil
+		return &OnPremClientConfig{}, nil
 	case "gcp":
-		return NewGcpClientImpl(caAddr), nil
+		return &GcpClientConfig{}, nil
 	case "aws":
-		return NewAwsClientImpl(), nil
+		return &AwsClientConfig{}, nil
+	default:
+		return nil, fmt.Errorf("Invalid env %s specified", platform)
+	}
+}
+
+// NewClient is the function to create implementations of the platform metadata client.
+func NewClient(platform string, cfg ClientConfig, caAddr string) (Client, error) {
+	switch platform {
+	case "onprem":
+		return NewOnPremClientImpl(cfg), nil
+	case "gcp":
+		return NewGcpClientImpl(cfg, caAddr), nil
+	case "aws":
+		return NewAwsClientImpl(cfg), nil
 	default:
 		return nil, fmt.Errorf("Invalid env %s specified", platform)
 	}

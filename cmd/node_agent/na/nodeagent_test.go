@@ -87,9 +87,13 @@ func (f FakeCertUtil) GetWaitTime(certBytes []byte, now time.Time, gracePeriodPe
 }
 
 func TestStartWithArgs(t *testing.T) {
-	generalPcConfig := platform.ClientConfig{"ca_file", "pkey", "cert_file"}
-	generalConfig := Config{
-		"ca_addr", "Google Inc.", 512, "onprem", time.Millisecond, 3, 50, generalPcConfig,
+	onpremPcConfig := platform.OnPremClientConfig{
+		RootCACertFile: "ca_file",
+		KeyFile:        "pkey",
+		CertChainFile:  "cert_file",
+	}
+	onpremConfig := Config{
+		"ca_addr", "Google Inc.", 512, "onprem", time.Millisecond, 3, 50, &onpremPcConfig, "", "",
 	}
 	testCases := map[string]struct {
 		config      *Config
@@ -101,7 +105,7 @@ func TestStartWithArgs(t *testing.T) {
 		fileContent []byte
 	}{
 		"Success": {
-			config:      &generalConfig,
+			config:      &onpremConfig,
 			pc:          mockpc.FakeClient{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, &pb.Response{IsApproved: true, SignedCertChain: []byte(`TESTCERT`)}, nil},
 			certUtil:    FakeCertUtil{time.Duration(0), nil},
@@ -116,7 +120,7 @@ func TestStartWithArgs(t *testing.T) {
 			sendTimes:   0,
 		},
 		"Platform error": {
-			config:      &generalConfig,
+			config:      &onpremConfig,
 			pc:          mockpc.FakeClient{nil, "", "service1", "", false},
 			cAClient:    &FakeCAClient{0, nil, nil},
 			expectedErr: "node Agent is not running on the right platform",
@@ -125,7 +129,7 @@ func TestStartWithArgs(t *testing.T) {
 		"CreateCSR error": {
 			// 128 is too small for a RSA private key. GenCSR will return error.
 			config: &Config{
-				"ca_addr", "Google Inc.", 128, "onprem", time.Millisecond, 3, 50, generalPcConfig,
+				"ca_addr", "Google Inc.", 128, "onprem", time.Millisecond, 3, 50, &onpremPcConfig, "", "",
 			},
 			pc:          mockpc.FakeClient{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, nil, nil},
@@ -133,28 +137,28 @@ func TestStartWithArgs(t *testing.T) {
 			sendTimes:   0,
 		},
 		"SendCSR empty response error": {
-			config:      &generalConfig,
+			config:      &onpremConfig,
 			pc:          mockpc.FakeClient{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, nil, nil},
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
 		},
 		"SendCSR returns error": {
-			config:      &generalConfig,
+			config:      &onpremConfig,
 			pc:          mockpc.FakeClient{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, nil, fmt.Errorf("Error returned from CA")},
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
 		},
 		"SendCSR not approved": {
-			config:      &generalConfig,
+			config:      &onpremConfig,
 			pc:          mockpc.FakeClient{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, &pb.Response{IsApproved: false}, nil},
 			expectedErr: "node agent can't get the CSR approved from Istio CA after max number of retries (3)",
 			sendTimes:   4,
 		},
 		"SendCSR parsing error": {
-			config:      &generalConfig,
+			config:      &onpremConfig,
 			pc:          mockpc.FakeClient{nil, "", "service1", "", true},
 			cAClient:    &FakeCAClient{0, &pb.Response{IsApproved: true, SignedCertChain: []byte(`TESTCERT`)}, nil},
 			certUtil:    FakeCertUtil{time.Duration(0), fmt.Errorf("cert parsing error")},

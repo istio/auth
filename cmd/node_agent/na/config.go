@@ -54,6 +54,12 @@ type Config struct {
 
 	// The Configuration for talking to the platform metadata server.
 	PlatformConfig platform.ClientConfig
+
+	// File path for service identity certificate
+	ServiceCertFile string
+
+	// File path for service identity private key
+	ServiceKeyFile string
 }
 
 // InitializeConfig initializes Config with default values.
@@ -61,5 +67,4 @@ func InitializeConfig(config *Config) {
 	config.CSRInitialRetrialInterval = defaultCSRInitialRetrialInterval
 	config.CSRMaxRetries = defaultCSRMaxRetries
 	config.CSRGracePeriodPercentage = defaultCSRGracePeriodPercentage
-	config.PlatformConfig = platform.ClientConfig{}
 }

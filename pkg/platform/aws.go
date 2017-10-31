@@ -54,17 +54,21 @@ vSeDCOUMYQR7R9LINYwouHIziqQYMAkGByqGSM44BAMDLwAwLAIUWXBlk40xTwSw
 
 // AwsClientImpl is the implementation of AWS metadata client.
 type AwsClientImpl struct {
+	cfg    *AwsClientConfig
 	client *ec2metadata.EC2Metadata
 }
 
 // NewAwsClientImpl creates a new AwsClientImpl.
-func NewAwsClientImpl() *AwsClientImpl {
-	return &AwsClientImpl{ec2metadata.New(session.Must(session.NewSession()))}
+func NewAwsClientImpl(c ClientConfig) *AwsClientImpl {
+	return &AwsClientImpl{
+		cfg:    c.(*AwsClientConfig),
+		client: ec2metadata.New(session.Must(session.NewSession())),
+	}
 }
 
 // GetDialOptions returns the GRPC dial options to connect to the CA.
-func (ci *AwsClientImpl) GetDialOptions(cfg *ClientConfig) ([]grpc.DialOption, error) {
-	creds, err := credentials.NewClientTLSFromFile(cfg.RootCACertFile, "")
+func (ci *AwsClientImpl) GetDialOptions() ([]grpc.DialOption, error) {
+	creds, err := credentials.NewClientTLSFromFile(ci.cfg.RootCACertFile, "")
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +133,7 @@ func (ci *AwsClientImpl) GetAgentCredential() ([]byte, error) {
 	return bytes, nil
 }
 
-// GetCredentialType returns the credential type as "aws".
+// GetCredentialType returns the credential type as "AWS".
 func (ci *AwsClientImpl) GetCredentialType() string {
-	return "aws"
+	return "AWS"
 }
